@@ -4,17 +4,43 @@ import { prisma } from '../../utils/prisma';
 import { AppError } from '../../middleware/errorHandler';
 import { createAuditLog } from '../../middleware/auditLogger';
 
+// ✅ SHARE RESOURCE (uses Clerk ID safely)
 export const shareResource = async (req: AuthRequest, res: Response) => {
-  const { granteeEmail, resourceId, resourceType, permissionLevel, expiresAt } = req.body;
+  const {
+    granteeClerkUserId: rawGranteeClerkUserId,
+    resourceId,
+    resourceType,
+    permissionLevel,
+    expiresAt,
+  } = req.body;
 
-  // Find grantee by Clerk email — you'd look up by email via Clerk
-  // For simplicity, accept granteeUserId directly
-  const { granteeUserId } = req.body;
+  const granteeClerkUserId = rawGranteeClerkUserId
 
+  if (!req.userId) throw new AppError(401, 'Unauthorized');
+
+  if (!granteeClerkUserId) {
+    throw new AppError(400, 'granteeClerkUserId is required');
+  }
+
+  // 🔍 Resolve Clerk ID → DB user
+  const granteeUser = await prisma.user.findUnique({
+    where: { clerkUserId: granteeClerkUserId },
+  });
+
+  if (!granteeUser) {
+    throw new AppError(404, 'User with this Clerk ID not found');
+  }
+
+  // 🚫 Prevent self-sharing
+  if (granteeUser.id === req.userId) {
+    throw new AppError(400, 'Cannot share resource with yourself');
+  }
+
+  // ✅ Create permission (FK safe)
   const perm = await prisma.permission.create({
     data: {
-      grantedBy: req.userId!,
-      granteeUserId,
+      grantedBy: req.userId,
+      granteeUserId: granteeUser.id,
       resourceId,
       resourceType,
       permissionLevel,
@@ -22,22 +48,78 @@ export const shareResource = async (req: AuthRequest, res: Response) => {
     },
   });
 
-  await createAuditLog(req.userId!, 'share', resourceId, resourceType, { granteeUserId, permissionLevel });
+  await createAuditLog(
+    req.userId,
+    'share',
+    resourceId,
+    resourceType,
+    {
+      granteeUserId: granteeUser.id,
+      granteeClerkUserId,
+      permissionLevel,
+    }
+  );
+
   res.status(201).json({ success: true, data: perm });
 };
 
+// ✅ REVOKE PERMISSION
 export const revokePermission = async (req: AuthRequest, res: Response) => {
-  const perm = await prisma.permission.findUnique({ where: { id: req.params.id } });
-  if (!perm || perm.grantedBy !== req.userId) throw new AppError(403, 'Access denied');
+  const { id } = req.params;
 
-  await prisma.permission.update({ where: { id: req.params.id }, data: { isActive: false } });
+  const perm = await prisma.permission.findUnique({
+    where: { id: Number(id) },
+  });
+
+  if (!perm || perm.grantedBy !== req.userId) {
+    throw new AppError(403, 'Access denied');
+  }
+
+  await prisma.permission.update({
+    where: { id: Number(id) },
+    data: { isActive: false },
+  });
+
   res.json({ success: true, message: 'Permission revoked' });
 };
 
+// ✅ GET RESOURCES SHARED WITH ME
 export const getSharedWithMe = async (req: AuthRequest, res: Response) => {
+  if (!req.userId) throw new AppError(401, 'Unauthorized');
+
   const perms = await prisma.permission.findMany({
-    where: { granteeUserId: req.userId, isActive: true },
+    where: {
+      granteeUserId: req.userId,
+      isActive: true,
+    },
+    include: {
+      granter: {
+        select: { clerkUserId: true }
+      }
+    },
     orderBy: { createdAt: 'desc' },
   });
-  res.json({ success: true, data: perms });
+
+  // Fetch the actual resources (files/folders) for each permission
+  const sharedItems = await Promise.all(
+    perms.map(async (perm) => {
+      let resource = null;
+      if (perm.resourceType === 'file') {
+        resource = await prisma.file.findUnique({
+          where: { id: perm.resourceId, isDeleted: false },
+        });
+      } else if (perm.resourceType === 'folder') {
+        resource = await prisma.folder.findUnique({
+          where: { id: perm.resourceId, isDeleted: false },
+        });
+      }
+      return {
+        ...perm,
+        file: perm.resourceType === 'file' ? resource : null,
+        folder: perm.resourceType === 'folder' ? resource : null,
+      };
+    })
+  );
+
+  res.json({ success: true, data: sharedItems });
 };

@@ -139,7 +139,7 @@ export default function SharedWithMe() {
                         {item.resourceType}
                       </td>
                       <td style={{ padding: '12px 16px', color: '#94a3b8', fontFamily: 'monospace', fontSize: 11 }}>
-                        {item.grantor?.clerkUserId?.slice(0, 16)}…
+                        {item.granter?.clerkUserId?.slice(0, 16)}…
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <span style={{

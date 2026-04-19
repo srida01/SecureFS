@@ -8,14 +8,14 @@ interface Props {
 }
 
 export default function ShareDialog({ resource, onClose }: Props) {
-  const [granteeUserId, setGranteeUserId] = useState('');
+  const [granteeClerkUserId, setGranteeClerkUserId] = useState('');
   const [level, setLevel] = useState('view');
 
   const share = async () => {
-    if (!granteeUserId) return toast.error('Enter a user ID');
+    if (!granteeClerkUserId) return toast.error('Enter a user ID');
     try {
       await api.post('/permissions/share', {
-        granteeUserId,
+        granteeClerkUserId,
         resourceId: resource.id,
         resourceType: resource.folderId ? 'file' : 'folder',
         permissionLevel: level,
@@ -33,8 +33,8 @@ export default function ShareDialog({ resource, onClose }: Props) {
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 20, color: '#e2e8f0' }}>Share "{resource.name}"</div>
         <label style={{ fontSize: 13, color: '#94a3b8', display: 'block', marginBottom: 6 }}>User ID to share with</label>
         <input
-          value={granteeUserId}
-          onChange={(e) => setGranteeUserId(e.target.value)}
+          value={granteeClerkUserId}
+          onChange={(e) => setGranteeClerkUserId(e.target.value)}
           placeholder="Paste user ID"
           style={{ width: '100%', padding: '8px 12px', background: '#0f172a', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 6, marginBottom: 16, boxSizing: 'border-box' }}
         />

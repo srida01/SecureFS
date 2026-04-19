@@ -4,6 +4,7 @@ import { prisma } from '../../utils/prisma';
 import { AppError } from '../../middleware/errorHandler';
 import { createAuditLog } from '../../middleware/auditLogger';
 import { storageService } from '../../services/storage.service';
+import { hasPermission } from '../../utils/accessControl';
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
   if (!req.file) throw new AppError(400, 'No file provided');
@@ -81,6 +82,12 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 export const getFileById = async (req: AuthRequest, res: Response) => {
   const file = await prisma.file.findUnique({ where: { id: req.params.id } });
   if (!file || file.isDeleted) throw new AppError(404, 'File not found');
+
+  if (file.ownerId !== req.userId) {
+    const canView = await hasPermission(req.userId!, file.id, 'file', 'view');
+    if (!canView) throw new AppError(403, 'Access denied');
+  }
+
   const url = storageService.getFileUrl(file.storageKey);
   res.json({ success: true, data: { ...file, url } });
 };
@@ -89,12 +96,9 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
   const file = await prisma.file.findUnique({ where: { id: req.params.id } });
   if (!file || file.isDeleted) throw new AppError(404, 'File not found');
 
-  // Check permission
   if (file.ownerId !== req.userId) {
-    const perm = await prisma.permission.findFirst({
-      where: { resourceId: file.id, granteeUserId: req.userId, isActive: true },
-    });
-    if (!perm) throw new AppError(403, 'Access denied');
+    const canDownload = await hasPermission(req.userId!, file.id, 'file', 'view');
+    if (!canDownload) throw new AppError(403, 'Access denied');
   }
 
   const url = storageService.getFileUrl(file.storageKey);
@@ -103,13 +107,42 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
 };
 
 export const renameFile = async (req: AuthRequest, res: Response) => {
-  const { name } = req.body;
+  const { name, folderId } = req.body;
   const file = await prisma.file.findUnique({ where: { id: req.params.id } });
   if (!file || file.ownerId !== req.userId) throw new AppError(403, 'Access denied');
 
-  const updated = await prisma.file.update({ where: { id: req.params.id }, data: { name } });
-  await createAuditLog(req.userId!, 'edit', file.id, 'file', { action: 'rename', oldName: file.name, newName: name });
+  const updateData: any = {};
+  if (name) updateData.name = name;
+  if (folderId) {
+    const destinationFolder = await prisma.folder.findUnique({ where: { id: folderId } });
+    if (!destinationFolder || destinationFolder.isDeleted) throw new AppError(404, 'Destination folder not found');
+    updateData.folderId = folderId;
+  }
+
+  const updated = await prisma.file.update({ where: { id: req.params.id }, data: updateData });
+  await createAuditLog(req.userId!, 'edit', file.id, 'file', {
+    action: 'update',
+    oldName: file.name,
+    newName: name || file.name,
+    oldFolderId: file.folderId,
+    newFolderId: folderId || file.folderId,
+  });
   res.json({ success: true, data: updated });
+};
+
+export const restoreFile = async (req: AuthRequest, res: Response) => {
+  const file = await prisma.file.findUnique({ where: { id: req.params.id } });
+  if (!file || file.ownerId !== req.userId) throw new AppError(403, 'Access denied');
+  if (!file.isDeleted) throw new AppError(400, 'File is not deleted');
+
+  await prisma.file.update({ where: { id: req.params.id }, data: { isDeleted: false } });
+  await prisma.storageQuota.update({
+    where: { userId: req.userId },
+    data: { usedBytes: { increment: file.sizeBytes } },
+  });
+
+  await createAuditLog(req.userId!, 'edit', file.id, 'file', { action: 'restore', name: file.name });
+  res.json({ success: true, message: 'File restored' });
 };
 
 export const deleteFile = async (req: AuthRequest, res: Response) => {
@@ -124,6 +157,18 @@ export const deleteFile = async (req: AuthRequest, res: Response) => {
 
   await createAuditLog(req.userId!, 'delete', file.id, 'file', { name: file.name });
   res.json({ success: true, message: 'File deleted' });
+};
+
+export const getDeletedFiles = async (req: AuthRequest, res: Response) => {
+  const files = await prisma.file.findMany({
+    where: {
+      ownerId: req.userId!,
+      isDeleted: true,
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  res.json({ success: true, data: files });
 };
 
 export const batchDeleteFiles = async (req: AuthRequest, res: Response) => {

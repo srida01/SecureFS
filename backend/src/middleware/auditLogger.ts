@@ -18,7 +18,7 @@ export const createAuditLog = async (
       action,
       resourceId,
       resourceType,
-      metadata: metadata ? JSON.stringify(metadata) : undefined,
+      metadata: metadata || undefined,
       status,
       ipAddress,
     },
