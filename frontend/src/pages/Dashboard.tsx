@@ -189,10 +189,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <FolderTree
-          currentFolderId={currentFolderId}
-          onSelect={(id) => dispatch(setCurrentFolder(id))}
-        />
+        
 
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <UserButton />
