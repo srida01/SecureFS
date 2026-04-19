@@ -14,8 +14,15 @@ import { searchRouter } from './modules/search/search.router';
 import { adminRouter } from './modules/admin/admin.router';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
+import { validateEnvironment } from './utils/validateEnv';
 
+
+// BigInt serialization fix
+(BigInt.prototype as any).toJSON = function() {
+  return this.toString();
+};
 dotenv.config();
+validateEnvironment();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

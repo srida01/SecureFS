@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useAuth, useUser, UserButton } from '@clerk/clerk-react';
+import { useUser, UserButton, useAuth } from '@clerk/clerk-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
@@ -30,14 +30,13 @@ export default function Dashboard() {
   // Sync user on mount
   useEffect(() => {
     (async () => {
-      const token = await getToken();
-      const res = await api.post('/auth/sync', {}, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.post('/auth/sync', {});
       dispatch(setUser(res.data.data));
 
       // Get or create root folder
-      const foldersRes = await folderService.getFolders(null, token || undefined);
+      const foldersRes = await folderService.getFolders(null);
       if (foldersRes.length === 0) {
-        const root = await folderService.createFolder('My Files', null, token!);
+        const root = await folderService.createFolder('My Files', null);
         setRootFolderId(root.id);
         dispatch(setCurrentFolder(root.id));
       } else {
@@ -54,10 +53,9 @@ export default function Dashboard() {
   }, [currentFolderId]);
 
   const loadContents = async () => {
-    const token = await getToken();
     const [f, d] = await Promise.all([
-      fileService.getFiles(currentFolderId!, token!),
-      folderService.getFolders(currentFolderId, token!),
+      fileService.getFiles(currentFolderId!),
+      folderService.getFolders(currentFolderId),
     ]);
     dispatch(setFiles(f));
     dispatch(setFolders(d));
@@ -65,10 +63,9 @@ export default function Dashboard() {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!currentFolderId) return toast.error('Select a folder first');
-    const token = await getToken();
     for (const file of acceptedFiles) {
       try {
-        await fileService.uploadFile(file, currentFolderId, token!, (p) => {
+        await fileService.uploadFile(file, currentFolderId, (p) => {
           setUploadProgress((prev) => ({ ...prev, [file.name]: p }));
         });
         toast.success(`${file.name} uploaded`);
@@ -84,9 +81,8 @@ export default function Dashboard() {
 
   const createFolder = async () => {
     if (!newFolderName.trim()) return;
-    const token = await getToken();
     try {
-      await folderService.createFolder(newFolderName, currentFolderId, token!);
+      await folderService.createFolder(newFolderName, currentFolderId);
       toast.success('Folder created');
       setNewFolderName('');
       setShowNewFolder(false);
@@ -97,10 +93,9 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (type: 'file' | 'folder', id: string) => {
-    const token = await getToken();
     try {
-      if (type === 'file') await fileService.deleteFile(id, token!);
-      else await folderService.deleteFolder(id, token!);
+      if (type === 'file') await fileService.deleteFile(id);
+      else await folderService.deleteFolder(id);
       toast.success(`${type} deleted`);
       loadContents();
     } catch {
@@ -109,8 +104,7 @@ export default function Dashboard() {
   };
 
   const handleDownload = async (fileId: string, fileName: string) => {
-    const token = await getToken();
-    const { url } = await fileService.downloadFile(fileId, token!);
+    const { url } = await fileService.downloadFile(fileId);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;

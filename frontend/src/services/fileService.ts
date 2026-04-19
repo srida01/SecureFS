@@ -1,20 +1,19 @@
 import api from './api';
 
 export const fileService = {
-  async getFiles(folderId?: string, token?: string) {
+  async getFiles(folderId?: string) {
     const res = await api.get('/files', {
       params: { folderId },
-      headers: { Authorization: `Bearer ${token}` },
     });
     return res.data.data;
   },
 
-  async uploadFile(file: File, folderId: string, token: string, onProgress?: (p: number) => void) {
+  async uploadFile(file: File, folderId: string, onProgress?: (p: number) => void) {
     const form = new FormData();
     form.append('file', file);
     form.append('folderId', folderId);
     const res = await api.post('/files/upload', form, {
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => {
         if (onProgress && e.total) onProgress(Math.round((e.loaded * 100) / e.total));
       },
@@ -22,41 +21,37 @@ export const fileService = {
     return res.data.data;
   },
 
-  async deleteFile(id: string, token: string) {
-    await api.delete(`/files/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+  async deleteFile(id: string) {
+    await api.delete(`/files/${id}`);
   },
 
-  async downloadFile(id: string, token: string) {
-    const res = await api.get(`/files/${id}/download`, { headers: { Authorization: `Bearer ${token}` } });
+  async downloadFile(id: string) {
+    const res = await api.get(`/files/${id}/download`);
     return res.data.data;
   },
 
-  async searchFiles(query: string, token: string) {
+  async searchFiles(query: string) {
     const res = await api.get('/search', {
       params: { q: query },
-      headers: { Authorization: `Bearer ${token}` },
     });
     return res.data.data;
   },
 };
 
 export const folderService = {
-  async getFolders(parentFolderId?: string | null, token?: string) {
+  async getFolders(parentFolderId?: string | null) {
     const res = await api.get('/folders', {
       params: { parentFolderId },
-      headers: { Authorization: `Bearer ${token}` },
     });
     return res.data.data;
   },
 
-  async createFolder(name: string, parentFolderId: string | null, token: string) {
-    const res = await api.post('/folders', { name, parentFolderId }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  async createFolder(name: string, parentFolderId: string | null) {
+    const res = await api.post('/folders', { name, parentFolderId });
     return res.data.data;
   },
 
-  async deleteFolder(id: string, token: string) {
-    await api.delete(`/folders/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+  async deleteFolder(id: string) {
+    await api.delete(`/folders/${id}`);
   },
 };

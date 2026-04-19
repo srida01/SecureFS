@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { fileService } from '../services/fileService';
 
 export default function SearchBar() {
-  const { getToken } = useAuth();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -11,8 +9,7 @@ export default function SearchBar() {
   const search = async (q: string) => {
     if (!q.trim()) { setResults(null); return; }
     setLoading(true);
-    const token = await getToken();
-    const data = await fileService.searchFiles(q, token!);
+    const data = await fileService.searchFiles(q);
     setResults(data);
     setLoading(false);
   };

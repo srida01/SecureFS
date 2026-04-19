@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { clerkClient } from '@clerk/clerk-sdk-node';
 import { prisma } from '../utils/prisma';
 import { AppError } from './errorHandler';
+import { logger } from '../utils/logger';
+import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -43,6 +45,22 @@ export const authenticate = async (
     req.userRole = user.role;
     next();
   } catch (err) {
+    // Decode token header for debugging key ID mismatch
+    const decodedHeader = jwt.decode(token, { complete: true })?.header;
+    const tokenKid = decodedHeader?.kid;
+    
+    logger.error('Token verification failed', {
+      error: err instanceof Error ? err.message : 'Unknown error',
+      tokenStart: token?.substring(0, 20),
+      tokenKid,
+      clerkSecretKeySet: !!process.env.CLERK_SECRET_KEY,
+    });
+    
+    // Provide more specific error message for kid mismatch
+    if (err instanceof Error && err.message.includes('kid')) {
+      throw new AppError(401, 'Token key ID mismatch - ensure backend and frontend use the same Clerk instance');
+    }
+    
     throw new AppError(401, 'Invalid or expired token');
   }
 };

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { folderService } from '../services/fileService';
 
 interface Props {
@@ -8,13 +7,11 @@ interface Props {
 }
 
 export default function FolderTree({ currentFolderId, onSelect }: Props) {
-  const { getToken } = useAuth();
   const [roots, setRoots] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
-      const token = await getToken();
-      const f = await folderService.getFolders(null, token!);
+      const f = await folderService.getFolders(null);
       setRoots(f);
     })();
   }, []);

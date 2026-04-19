@@ -1,16 +1,35 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from '@clerk/clerk-react';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard.tsx';
 import AdminPanel from './pages/AdminPanel.tsx';
 import SignInPage from './pages/SignInPage.tsx';
 import SignUpPage from './pages/SignUpPage.tsx';
+import { setupAxiosInterceptor } from './services/api';
+
+function AuthInterceptorSetup() {
+  const { getToken } = useAuth();
+  const isSetupRef = useRef(false);
+
+  useEffect(() => {
+    // Only set up interceptor once
+    if (!isSetupRef.current && getToken) {
+      isSetupRef.current = true;
+      setupAxiosInterceptor(getToken);
+    }
+  }, [getToken]);
+
+  return null;
+}
 
 function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
+      <SignedIn>
+        <AuthInterceptorSetup />
+      </SignedIn>
       <Routes>
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/sign-up" element={<SignUpPage />} />

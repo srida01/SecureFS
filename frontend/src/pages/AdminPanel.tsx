@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function AdminPanel() {
-  const { getToken } = useAuth();
   const navigate = useNavigate();
   const [logs, setLogs] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -16,13 +14,12 @@ export default function AdminPanel() {
   }, [tab]);
 
   const loadData = async () => {
-    const token = await getToken();
     try {
       if (tab === 'logs') {
-        const res = await api.get('/admin/audit-logs', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get('/admin/audit-logs');
         setLogs(res.data.data);
       } else {
-        const res = await api.get('/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get('/admin/users');
         setUsers(res.data.data);
       }
     } catch (e: any) {

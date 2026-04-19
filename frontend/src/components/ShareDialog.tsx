@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -9,20 +8,18 @@ interface Props {
 }
 
 export default function ShareDialog({ resource, onClose }: Props) {
-  const { getToken } = useAuth();
   const [granteeUserId, setGranteeUserId] = useState('');
   const [level, setLevel] = useState('view');
 
   const share = async () => {
     if (!granteeUserId) return toast.error('Enter a user ID');
-    const token = await getToken();
     try {
       await api.post('/permissions/share', {
         granteeUserId,
         resourceId: resource.id,
         resourceType: resource.folderId ? 'file' : 'folder',
         permissionLevel: level,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       toast.success('Shared successfully');
       onClose();
     } catch (e: any) {

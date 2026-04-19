@@ -1,11 +1,5 @@
 {
   "compilerOptions": {
-    "types": ["node"],
-    "esModuleInterop": true,
-    "target": "ES2020",
-    "module": "NodeNext",
-"moduleResolution": "NodeNext",
-    "lib": ["ES2020"],
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
@@ -14,8 +8,11 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "target": "ES2020",
+    "module": "commonjs",
+    "types": ["node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
