@@ -32,6 +32,8 @@ export default function Dashboard() {
   const [showSearch, setShowSearch] = useState(false);
   const [breadcrumbs, setBreadcrumbs] = useState<{ id: string; name: string }[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [sharedReturnPath, setSharedReturnPath] = useState<string | null>(null);
+  const [currentFolderPermission, setCurrentFolderPermission] = useState<string | null>(null);
 
   // Sync user on mount
   useEffect(() => {
@@ -43,9 +45,11 @@ export default function Dashboard() {
       const foldersRes = await folderService.getFolders(null);
 
       // Support navigating here with a pre-selected folder (e.g. from SharedWithMe)
-      const targetFolderId = (location.state as any)?.folderId;
+      const state = location.state as any;
+      const targetFolderId = state?.folderId;
       if (targetFolderId) {
         dispatch(setCurrentFolder(targetFolderId));
+        if (state?.fromSharedPage) setSharedReturnPath('/shared');
         return;
       }
 
@@ -68,12 +72,15 @@ export default function Dashboard() {
   }, [currentFolderId]);
 
   const loadContents = async () => {
-    const [f, d] = await Promise.all([
+    const [folder, files, subfolders] = await Promise.all([
+      folderService.getFolder(currentFolderId!),
       fileService.getFiles(currentFolderId!),
       folderService.getFolders(currentFolderId),
     ]);
-    dispatch(setFiles(f));
-    dispatch(setFolders(d));
+
+    setCurrentFolderPermission(folder.permissionLevel || 'owner');
+    dispatch(setFiles(files));
+    dispatch(setFolders(subfolders));
   };
 
   const navigateToFolder = (id: string, name: string) => {
@@ -173,11 +180,12 @@ export default function Dashboard() {
         {/* Sidebar nav */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontSize: 10, color: '#334155', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Navigation</div>
-          <NavItem label="📁 My Files" active onClick={() => {}} />
-          <NavItem label="🔗 Shared with Me" onClick={() => navigate('/shared')} />
-          <NavItem label="⚙️ Settings" onClick={() => navigate('/settings')} />
+          <NavItem label="📁 My Files" active={location.pathname === '/'} onClick={() => navigate('/')} />
+          <NavItem label="🔗 Shared with Me" active={location.pathname === '/shared'} onClick={() => navigate('/shared')} />
+          <NavItem label="🔐 Shared by You" active={location.pathname === '/shared-by-me'} onClick={() => navigate('/shared-by-me')} />
+          <NavItem label="⚙️ Settings" active={location.pathname === '/settings'} onClick={() => navigate('/settings')} />
           {userProfile?.role === 'admin' && (
-            <NavItem label="🛡 Admin Panel" onClick={() => navigate('/admin')} />
+            <NavItem label="🛡 Admin Panel" active={location.pathname === '/admin'} onClick={() => navigate('/admin')} />
           )}
         </div>
 
@@ -219,22 +227,48 @@ export default function Dashboard() {
           </div>
 
           {/* Actions */}
+          {sharedReturnPath && (
+            <button
+              onClick={() => {
+                navigate(sharedReturnPath);
+                setSharedReturnPath(null);
+              }}
+              style={headerBtn('#334155', '#fff')}
+            >
+              ← Back to shared
+            </button>
+          )}
+            {sharedReturnPath && (
+            <button
+              onClick={() => {
+                navigate(sharedReturnPath);
+                setSharedReturnPath(null);
+              }}
+              style={headerBtn('#334155', '#fff')}
+            >
+              ← Back to shared
+            </button>
+          )}
           <button
             onClick={() => setShowSearch(true)}
             style={headerBtn('#1e293b', '#64748b')}
           >
             🔍 Search
           </button>
-          <button
-            onClick={() => setShowNewFolder(true)}
-            style={headerBtn('#1e293b', '#64748b')}
-          >
-            + New Folder
-          </button>
-          <label style={{ ...headerBtn('#6366f1', '#fff'), cursor: 'pointer' }}>
-            ↑ Upload
-            <input type="file" multiple style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
-          </label>
+          {(currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete') && (
+            <button
+              onClick={() => setShowNewFolder(true)}
+              style={headerBtn('#1e293b', '#64748b')}
+            >
+              + New Folder
+            </button>
+          )}
+          {(currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete') && (
+            <label style={{ ...headerBtn('#6366f1', '#fff'), cursor: 'pointer' }}>
+              ↑ Upload
+              <input type="file" multiple style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
+            </label>
+          )}
         </div>
 
         {/* Drag overlay */}
@@ -292,6 +326,8 @@ export default function Dashboard() {
             onRefresh={loadContents}
             selectedItems={selectedItems}
             onSelectionChange={setSelectedItems}
+          canRename={currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete'}
+          canDelete={currentFolderPermission === 'owner' || currentFolderPermission === 'delete'}
           />
         </div>
       </div>

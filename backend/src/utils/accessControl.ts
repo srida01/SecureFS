@@ -48,6 +48,25 @@ export const getEffectivePermission = async (
   if (resourceType === 'folder') {
     const ancestorFolderIds = await getFolderAncestors(resourceId);
     for (const folderId of ancestorFolderIds) {
+      const folder = await prisma.folder.findUnique({
+        where: { id: folderId },
+        select: { ownerId: true },
+      });
+      if (folder?.ownerId === userId) {
+        return {
+          id: `${resourceId}-owner-fallback`,
+          grantedBy: userId,
+          granteeUserId: userId,
+          resourceId,
+          resourceType: 'folder',
+          permissionLevel: 'owner',
+          expiresAt: null,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any;
+      }
+
       const perm = await prisma.permission.findFirst({
         where: {
           granteeUserId: userId,

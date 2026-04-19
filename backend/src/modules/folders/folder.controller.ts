@@ -6,7 +6,7 @@ import { AuthRequest } from '../../middleware/authenticate';
 import { prisma } from '../../utils/prisma';
 import { AppError } from '../../middleware/errorHandler';
 import { createAuditLog } from '../../middleware/auditLogger';
-import { hasPermission } from '../../utils/accessControl';
+import { getEffectivePermission, hasPermission } from '../../utils/accessControl';
 
 export const createFolder = async (req: AuthRequest, res: Response) => {
   const { name, parentFolderId } = req.body;
@@ -17,7 +17,11 @@ export const createFolder = async (req: AuthRequest, res: Response) => {
 
   if (parentFolderId) {
     const parent = await prisma.folder.findUnique({ where: { id: parentFolderId } });
-    if (!parent) throw new AppError(404, 'Parent folder not found');
+    if (!parent || parent.isDeleted) throw new AppError(404, 'Parent folder not found');
+    if (parent.ownerId !== req.userId) {
+      const canEdit = await hasPermission(req.userId!, parent.id, 'folder', 'edit');
+      if (!canEdit) throw new AppError(403, 'Access denied');
+    }
     depth = parent.depth + 1;
     folderPath = `${parent.path}/${name}`;
   }
@@ -39,10 +43,31 @@ export const createFolder = async (req: AuthRequest, res: Response) => {
 export const getFolders = async (req: AuthRequest, res: Response) => {
   const { parentFolderId } = req.query;
 
+  if (parentFolderId) {
+    const parentId = String(parentFolderId);
+    const parent = await prisma.folder.findUnique({ where: { id: parentId } });
+    if (!parent || parent.isDeleted) throw new AppError(404, 'Parent folder not found');
+    if (parent.ownerId !== req.userId) {
+      const canView = await hasPermission(req.userId!, parentId, 'folder', 'view');
+      if (!canView) throw new AppError(403, 'Access denied');
+    }
+
+    const folders = await prisma.folder.findMany({
+      where: {
+        parentFolderId: parentId,
+        isDeleted: false,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.json({ success: true, data: folders });
+    return;
+  }
+
   const folders = await prisma.folder.findMany({
     where: {
       ownerId: req.userId!,
-      parentFolderId: parentFolderId ? String(parentFolderId) : null,
+      parentFolderId: null,
       isDeleted: false,
     },
     orderBy: { name: 'asc' },
@@ -96,15 +121,35 @@ export const getFolder = async (req: AuthRequest, res: Response) => {
   if (folder.ownerId !== req.userId) {
     const canView = await hasPermission(req.userId!, folder.id, 'folder', 'view');
     if (!canView) throw new AppError(403, 'Access denied');
+
+    const perm = await getEffectivePermission(req.userId!, folder.id, 'folder');
+    res.json({
+      success: true,
+      data: {
+        ...folder,
+        permissionLevel: perm?.permissionLevel || 'view',
+      },
+    });
+    return;
   }
 
-  res.json({ success: true, data: folder });
+  res.json({
+    success: true,
+    data: {
+      ...folder,
+      permissionLevel: 'owner',
+    },
+  });
 };
 
 export const renameFolder = async (req: AuthRequest, res: Response) => {
   const { name, parentFolderId } = req.body;
   const folder = await prisma.folder.findUnique({ where: { id: req.params.id } });
-  if (!folder || folder.ownerId !== req.userId) throw new AppError(403, 'Access denied');
+  if (!folder) throw new AppError(404, 'Folder not found');
+  if (folder.ownerId !== req.userId) {
+    const canEdit = await hasPermission(req.userId!, folder.id, 'folder', 'edit');
+    if (!canEdit) throw new AppError(403, 'Access denied');
+  }
 
   let parent = null;
   let depth = 0;
@@ -134,7 +179,11 @@ export const renameFolder = async (req: AuthRequest, res: Response) => {
 
 export const deleteFolder = async (req: AuthRequest, res: Response) => {
   const folder = await prisma.folder.findUnique({ where: { id: req.params.id } });
-  if (!folder || folder.ownerId !== req.userId) throw new AppError(403, 'Access denied');
+  if (!folder) throw new AppError(404, 'Folder not found');
+  if (folder.ownerId !== req.userId) {
+    const canDelete = await hasPermission(req.userId!, folder.id, 'folder', 'delete');
+    if (!canDelete) throw new AppError(403, 'Access denied');
+  }
 
   const descendantIds = await getDescendantFolderIds(folder);
   const allFolderIds = [folder.id, ...descendantIds];

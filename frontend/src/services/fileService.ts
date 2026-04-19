@@ -51,6 +51,11 @@ export const folderService = {
     return res.data.data;
   },
 
+  async getFolder(id: string) {
+    const res = await api.get(`/folders/${id}`);
+    return res.data.data;
+  },
+
   async deleteFolder(id: string) {
     await api.delete(`/folders/${id}`);
   },

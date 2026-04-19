@@ -12,6 +12,13 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
   const { folderId } = req.body;
   if (!folderId) throw new AppError(400, 'folderId is required');
 
+  const parentFolder = await prisma.folder.findUnique({ where: { id: folderId } });
+  if (!parentFolder || parentFolder.isDeleted) throw new AppError(404, 'Target folder not found');
+  if (parentFolder.ownerId !== req.userId) {
+    const canEdit = await hasPermission(req.userId!, folderId, 'folder', 'edit');
+    if (!canEdit) throw new AppError(403, 'Access denied');
+  }
+
   // Check quota
   const quota = await prisma.storageQuota.findUnique({ where: { userId: req.userId } });
   if (!quota) throw new AppError(404, 'Storage quota not found');
@@ -67,10 +74,30 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 export const getFiles = async (req: AuthRequest, res: Response) => {
   const { folderId } = req.query;
 
+  if (folderId) {
+    const folder = await prisma.folder.findUnique({ where: { id: String(folderId) } });
+    if (!folder || folder.isDeleted) throw new AppError(404, 'Folder not found');
+    if (folder.ownerId !== req.userId) {
+      const canView = await hasPermission(req.userId!, folder.id, 'folder', 'view');
+      if (!canView) throw new AppError(403, 'Access denied');
+    }
+
+    const files = await prisma.file.findMany({
+      where: {
+        folderId: String(folderId),
+        isDeleted: false,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.json({ success: true, data: files });
+    return;
+  }
+
   const files = await prisma.file.findMany({
     where: {
       ownerId: req.userId!,
-      folderId: folderId ? String(folderId) : undefined,
+      folderId: undefined,
       isDeleted: false,
     },
     orderBy: { name: 'asc' },
@@ -109,7 +136,11 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
 export const renameFile = async (req: AuthRequest, res: Response) => {
   const { name, folderId } = req.body;
   const file = await prisma.file.findUnique({ where: { id: req.params.id } });
-  if (!file || file.ownerId !== req.userId) throw new AppError(403, 'Access denied');
+  if (!file) throw new AppError(404, 'File not found');
+  if (file.ownerId !== req.userId) {
+    const canEdit = await hasPermission(req.userId!, file.id, 'file', 'edit');
+    if (!canEdit) throw new AppError(403, 'Access denied');
+  }
 
   const updateData: any = {};
   if (name) updateData.name = name;
@@ -147,7 +178,11 @@ export const restoreFile = async (req: AuthRequest, res: Response) => {
 
 export const deleteFile = async (req: AuthRequest, res: Response) => {
   const file = await prisma.file.findUnique({ where: { id: req.params.id } });
-  if (!file || file.ownerId !== req.userId) throw new AppError(403, 'Access denied');
+  if (!file) throw new AppError(404, 'File not found');
+  if (file.ownerId !== req.userId) {
+    const canDelete = await hasPermission(req.userId!, file.id, 'file', 'delete');
+    if (!canDelete) throw new AppError(403, 'Access denied');
+  }
 
   await prisma.file.update({ where: { id: req.params.id }, data: { isDeleted: true } });
   await prisma.storageQuota.update({

@@ -16,6 +16,8 @@ interface Props {
   onRefresh: () => void;
   selectedItems?: Set<string>;
   onSelectionChange?: (selected: Set<string>) => void;
+  canRename?: boolean;
+  canDelete?: boolean;
 }
 
 const FILE_ICONS: Record<string, string> = {
@@ -37,7 +39,7 @@ function getIcon(mimeType: string) {
 
 type ContextMenu = { x: number; y: number; item: any; type: 'file' | 'folder' } | null;
 
-export default function FileGrid({ folders, files, onFolderClick, onDelete, onBatchDelete, onDownload, onShare, onRefresh, selectedItems = new Set(), onSelectionChange }: Props) {
+export default function FileGrid({ folders, files, onFolderClick, onDelete, onBatchDelete, onDownload, onShare, onRefresh, selectedItems = new Set(), onSelectionChange, canRename = true, canDelete = true }: Props) {
   const { getToken } = useAuth();
   const [contextMenu, setContextMenu] = useState<ContextMenu>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -116,15 +118,17 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
         <div style={{ background: '#1e293b', padding: '12px 24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>{selectedItems.size} selected</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => {
-                const fileIds = Array.from(selectedItems).filter((id) => files.some((f) => f.id === id));
-                if (fileIds.length > 0 && onBatchDelete) onBatchDelete(fileIds, 'file');
-              }}
-              style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-            >
-              🗑 Delete Selected
-            </button>
+            {canDelete && (
+              <button
+                onClick={() => {
+                  const fileIds = Array.from(selectedItems).filter((id) => files.some((f) => f.id === id));
+                  if (fileIds.length > 0 && onBatchDelete) onBatchDelete(fileIds, 'file');
+                }}
+                style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+              >
+                🗑 Delete Selected
+              </button>
+            )}
             <button
               onClick={clearSelection}
               style={{ padding: '6px 12px', background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
@@ -256,19 +260,23 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
               📂 Open
             </button>
           )}
-          <button onClick={() => startRename(contextMenu.item, contextMenu.type)} style={menuBtn}>
-            ✏️ Rename
-          </button>
+          {canRename && (
+            <button onClick={() => startRename(contextMenu.item, contextMenu.type)} style={menuBtn}>
+              ✏️ Rename
+            </button>
+          )}
           <button onClick={() => { onShare(contextMenu.item); close(); }} style={menuBtn}>
             🔗 Share
           </button>
           <div style={{ height: 1, background: '#334155', margin: '4px 0' }} />
-          <button
-            onClick={() => { onDelete(contextMenu.type, contextMenu.item.id); close(); }}
-            style={{ ...menuBtn, color: '#ef4444' }}
-          >
-            🗑 Delete
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => { onDelete(contextMenu.type, contextMenu.item.id); close(); }}
+              style={{ ...menuBtn, color: '#ef4444' }}
+            >
+              🗑 Delete
+            </button>
+          )}
         </div>
       )}
 

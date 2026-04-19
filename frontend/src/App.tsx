@@ -8,6 +8,7 @@ import SignInPage from './pages/SignInPage.tsx';
 import SignUpPage from './pages/SignUpPage.tsx';
 import UserSettings from './pages/UserSettings.tsx';
 import SharedWithMe from './pages/SharedWithMe.tsx';
+import SharedByMe from './pages/SharedByMe.tsx';
 import { setupAxiosInterceptor } from './services/api';
 
 function AuthInterceptorSetup() {
@@ -45,6 +46,7 @@ function App() {
                   <Route path="/admin" element={<AdminPanel />} />
                   <Route path="/settings" element={<UserSettings />} />
                   <Route path="/shared" element={<SharedWithMe />} />
+                  <Route path="/shared-by-me" element={<SharedByMe />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </SignedIn>
