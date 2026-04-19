@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import FilePreviewModal from './FilePreviewModal.tsx';
+import FilePreviewModal from './FilePreviewModal';
 import VersionHistoryModal from './VersionHistoryModal';
 
 interface Props {
@@ -10,12 +10,9 @@ interface Props {
   files: any[];
   onFolderClick: (id: string) => void;
   onDelete: (type: 'file' | 'folder', id: string) => void;
-  onBatchDelete?: (ids: string[], type: 'file' | 'folder') => void;
   onDownload: (id: string, name: string) => void;
   onShare: (item: any) => void;
   onRefresh: () => void;
-  selectedItems?: Set<string>;
-  onSelectionChange?: (selected: Set<string>) => void;
 }
 
 const FILE_ICONS: Record<string, string> = {
@@ -37,7 +34,7 @@ function getIcon(mimeType: string) {
 
 type ContextMenu = { x: number; y: number; item: any; type: 'file' | 'folder' } | null;
 
-export default function FileGrid({ folders, files, onFolderClick, onDelete, onBatchDelete, onDownload, onShare, onRefresh, selectedItems = new Set(), onSelectionChange }: Props) {
+export default function FileGrid({ folders, files, onFolderClick, onDelete, onDownload, onShare, onRefresh }: Props) {
   const { getToken } = useAuth();
   const [contextMenu, setContextMenu] = useState<ContextMenu>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -45,25 +42,6 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
   const [renameType, setRenameType] = useState<'file' | 'folder'>('file');
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [versionFile, setVersionFile] = useState<any>(null);
-
-  const toggleSelection = (id: string) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    onSelectionChange?.(newSelected);
-  };
-
-  const selectAll = () => {
-    const allIds = new Set([...folders.map((f) => f.id), ...files.map((f) => f.id)]);
-    onSelectionChange?.(allIds);
-  };
-
-  const clearSelection = () => {
-    onSelectionChange?.(new Set());
-  };
 
   const handleRightClick = (e: React.MouseEvent, item: any, type: 'file' | 'folder') => {
     e.preventDefault();
@@ -111,36 +89,6 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
 
   return (
     <div onClick={close}>
-      {/* Batch selection bar */}
-      {selectedItems.size > 0 && (
-        <div style={{ background: '#1e293b', padding: '12px 24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>{selectedItems.size} selected</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => {
-                const fileIds = Array.from(selectedItems).filter((id) => files.some((f) => f.id === id));
-                if (fileIds.length > 0 && onBatchDelete) onBatchDelete(fileIds, 'file');
-              }}
-              style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-            >
-              🗑 Delete Selected
-            </button>
-            <button
-              onClick={clearSelection}
-              style={{ padding: '6px 12px', background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
-            >
-              Clear
-            </button>
-          </div>
-          <button
-            onClick={selectAll}
-            style={{ padding: '6px 12px', background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginLeft: 'auto' }}
-          >
-            Select All
-          </button>
-        </div>
-      )}
-      
       {folders.length > 0 && (
         <>
           <div style={sectionLabel}>Folders</div>
@@ -150,16 +98,8 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
                 key={f.id}
                 onDoubleClick={() => onFolderClick(f.id)}
                 onContextMenu={(e) => handleRightClick(e, f, 'folder')}
-                style={{ ...card, border: selectedItems.has(f.id) ? '2px solid #6366f1' : card.border, background: selectedItems.has(f.id) ? '#1e293b' : card.background }}
+                style={card}
               >
-                <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.has(f.id)}
-                    onChange={() => toggleSelection(f.id)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </label>
                 <div style={{ fontSize: 36, marginBottom: 8 }}>📁</div>
                 {renamingId === f.id ? (
                   <input
@@ -193,16 +133,8 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
                 key={f.id}
                 onDoubleClick={() => setPreviewFile(f)}
                 onContextMenu={(e) => handleRightClick(e, f, 'file')}
-                style={{ ...card, border: selectedItems.has(f.id) ? '2px solid #6366f1' : card.border, background: selectedItems.has(f.id) ? '#1e293b' : card.background }}
+                style={card}
               >
-                <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.has(f.id)}
-                    onChange={() => toggleSelection(f.id)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </label>
                 <div style={{ fontSize: 36, marginBottom: 8 }}>{getIcon(f.mimeType || '')}</div>
                 {renamingId === f.id ? (
                   <input

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useDropzone } from 'react-dropzone';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import type { RootState } from '../store/store';
+import { RootState } from '../store/store';
 import { setUser } from '../store/authSlice';
 import { setFiles, setFolders, setCurrentFolder } from '../store/fileSlice';
 import { fileService, folderService } from '../services/fileService';
@@ -13,7 +13,7 @@ import StorageWidget from '../components/StorageWidget';
 import FileGrid from '../components/FileGrid';
 import FolderTree from '../components/FolderTree';
 import ShareDialog from '../components/ShareDialog';
-import AdvancedSearch from '../components/AdvancedSearch.tsx';
+import AdvancedSearch from '../components/AdvancedSearch';
 
 export default function Dashboard() {
   const { getToken } = useAuth();
@@ -31,7 +31,6 @@ export default function Dashboard() {
   const [shareTarget, setShareTarget] = useState<any>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [breadcrumbs, setBreadcrumbs] = useState<{ id: string; name: string }[]>([]);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // Sync user on mount
   useEffect(() => {
@@ -40,7 +39,7 @@ export default function Dashboard() {
       const res = await api.post('/auth/sync', {}, { headers: { Authorization: `Bearer ${token}` } });
       dispatch(setUser(res.data.data));
 
-      const foldersRes = await folderService.getFolders(null);
+      const foldersRes = await folderService.getFolders(null, token || undefined);
 
       // Support navigating here with a pre-selected folder (e.g. from SharedWithMe)
       const targetFolderId = (location.state as any)?.folderId;
@@ -50,7 +49,7 @@ export default function Dashboard() {
       }
 
       if (foldersRes.length === 0) {
-        const root = await folderService.createFolder('My Files', null);
+        const root = await folderService.createFolder('My Files', null, token!);
         dispatch(setCurrentFolder(root.id));
         setBreadcrumbs([{ id: root.id, name: root.name }]);
       } else {
@@ -63,14 +62,14 @@ export default function Dashboard() {
   // Load files & folders when currentFolderId changes
   useEffect(() => {
     if (!currentFolderId) return;
-    setSelectedItems(new Set()); // Clear selection when navigating
     loadContents();
   }, [currentFolderId]);
 
   const loadContents = async () => {
+    const token = await getToken();
     const [f, d] = await Promise.all([
-      fileService.getFiles(currentFolderId!),
-      folderService.getFolders(currentFolderId),
+      fileService.getFiles(currentFolderId!, token!),
+      folderService.getFolders(currentFolderId, token!),
     ]);
     dispatch(setFiles(f));
     dispatch(setFolders(d));
@@ -92,9 +91,10 @@ export default function Dashboard() {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!currentFolderId) return toast.error('Select a folder first');
+    const token = await getToken();
     for (const file of acceptedFiles) {
       try {
-        await fileService.uploadFile(file, currentFolderId, (p: number) => {
+        await fileService.uploadFile(file, currentFolderId, token!, (p) => {
           setUploadProgress((prev) => ({ ...prev, [file.name]: p }));
         });
         toast.success(`${file.name} uploaded`);
@@ -110,8 +110,9 @@ export default function Dashboard() {
 
   const createFolder = async () => {
     if (!newFolderName.trim()) return;
+    const token = await getToken();
     try {
-      await folderService.createFolder(newFolderName, currentFolderId);
+      const folder = await folderService.createFolder(newFolderName, currentFolderId, token!);
       toast.success('Folder created');
       setNewFolderName('');
       setShowNewFolder(false);
@@ -122,9 +123,10 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (type: 'file' | 'folder', id: string) => {
+    const token = await getToken();
     try {
-      if (type === 'file') await fileService.deleteFile(id);
-      else await folderService.deleteFolder(id);
+      if (type === 'file') await fileService.deleteFile(id, token!);
+      else await folderService.deleteFolder(id, token!);
       toast.success(`${type} deleted`);
       loadContents();
     } catch {
@@ -132,25 +134,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleBatchDelete = async (ids: string[], type: 'file' | 'folder') => {
-    if (!window.confirm(`Delete ${ids.length} ${type}(s)? This cannot be undone.`)) return;
-    try {
-      const token = await getToken();
-      await api.post(
-        `/${type}s/batch-delete`,
-        { ids },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`${ids.length} ${type}(s) deleted`);
-      setSelectedItems(new Set());
-      loadContents();
-    } catch {
-      toast.error('Batch delete failed');
-    }
-  };
-
   const handleDownload = async (fileId: string, fileName: string) => {
-    const { url } = await fileService.downloadFile(fileId);
+    const token = await getToken();
+    const { url } = await fileService.downloadFile(fileId, token!);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
@@ -286,12 +272,9 @@ export default function Dashboard() {
               navigateToFolder(id, folder?.name || 'Folder');
             }}
             onDelete={handleDelete}
-            onBatchDelete={handleBatchDelete}
             onDownload={handleDownload}
             onShare={(item) => setShareTarget(item)}
             onRefresh={loadContents}
-            selectedItems={selectedItems}
-            onSelectionChange={setSelectedItems}
           />
         </div>
       </div>

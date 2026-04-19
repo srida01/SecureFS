@@ -1,36 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import { Toaster } from 'react-hot-toast';
-import Dashboard from './pages/Dashboard.tsx';
-import AdminPanel from './pages/AdminPanel.tsx';
-import SignInPage from './pages/SignInPage.tsx';
-import SignUpPage from './pages/SignUpPage.tsx';
-import UserSettings from './pages/UserSettings.tsx';
-import { setupAxiosInterceptor } from './services/api';
-
-function AuthInterceptorSetup() {
-  const { getToken } = useAuth();
-  const isSetupRef = useRef(false);
-
-  useEffect(() => {
-    // Only set up interceptor once
-    if (!isSetupRef.current && getToken) {
-      isSetupRef.current = true;
-      setupAxiosInterceptor(getToken);
-    }
-  }, [getToken]);
-
-  return null;
-}
+import Dashboard from './pages/Dashboard';
+import AdminPanel from './pages/AdminPanel';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import SharedWithMe from './pages/SharedWithMe';
+import UserSettings from './pages/UserSettings';
 
 function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-right" />
-      <SignedIn>
-        <AuthInterceptorSetup />
-      </SignedIn>
+      <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155' } }} />
       <Routes>
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/sign-up" element={<SignUpPage />} />
@@ -42,6 +24,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/admin" element={<AdminPanel />} />
+                  <Route path="/shared" element={<SharedWithMe />} />
                   <Route path="/settings" element={<UserSettings />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>

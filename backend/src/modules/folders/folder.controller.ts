@@ -77,3 +77,25 @@ export const deleteFolder = async (req: AuthRequest, res: Response) => {
   await createAuditLog(req.userId!, 'delete', folder.id, 'folder', { name: folder.name });
   res.json({ success: true, message: 'Folder deleted' });
 };
+
+export const batchDeleteFolders = async (req: AuthRequest, res: Response) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) throw new AppError(400, 'Invalid ids array');
+
+  // Verify ownership of all folders
+  const folders = await prisma.folder.findMany({
+    where: { id: { in: ids }, ownerId: req.userId! },
+  });
+
+  if (folders.length !== ids.length) throw new AppError(403, 'Access denied to some folders');
+
+  // Mark all as deleted
+  await prisma.folder.updateMany({
+    where: { id: { in: ids } },
+    data: { isDeleted: true },
+  });
+
+  // Audit log
+  await createAuditLog(req.userId!, 'delete', '', 'folder', { count: ids.length });
+  res.json({ success: true, message: `${ids.length} folders deleted` });
+};
