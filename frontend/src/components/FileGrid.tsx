@@ -106,7 +106,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', color: '#475569' }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>☁️</div>
         <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#64748b' }}>This folder is empty</div>
-        <div style={{ fontSize: 14 }}>Upload files or create a folder to get started</div>
+        <div style={{ fontSize: 14 }}>Upload files or folders, or create a folder to get started</div>
       </div>
     );
   }
@@ -122,7 +122,9 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
               <button
                 onClick={() => {
                   const fileIds = Array.from(selectedItems).filter((id) => files.some((f) => f.id === id));
+                  const folderIds = Array.from(selectedItems).filter((id) => folders.some((f) => f.id === id));
                   if (fileIds.length > 0 && onBatchDelete) onBatchDelete(fileIds, 'file');
+                  if (folderIds.length > 0 && onBatchDelete) onBatchDelete(folderIds, 'folder');
                 }}
                 style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
               >

@@ -99,16 +99,72 @@ export default function Dashboard() {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (!currentFolderId) return toast.error('Select a folder first');
-    for (const file of acceptedFiles) {
-      try {
-        await fileService.uploadFile(file, currentFolderId, (p: number) => {
-          setUploadProgress((prev) => ({ ...prev, [file.name]: p }));
-        });
-        toast.success(`${file.name} uploaded`);
-      } catch (e: any) {
-        toast.error(e.response?.data?.message || `Failed to upload ${file.name}`);
+
+    // Check if any files have relative paths (folder upload)
+    const hasFolders = acceptedFiles.some(f => (f as any).webkitRelativePath);
+
+    if (!hasFolders) {
+      // Regular file upload
+      for (const file of acceptedFiles) {
+        try {
+          await fileService.uploadFile(file, currentFolderId, (p: number) => {
+            setUploadProgress((prev) => ({ ...prev, [file.name]: p }));
+          });
+          toast.success(`${file.name} uploaded`);
+        } catch (e: any) {
+          toast.error(e.response?.data?.message || `Failed to upload ${file.name}`);
+        }
+      }
+    } else {
+      // Folder upload
+      const folderMap = new Map<string, string>(); // path -> folderId
+      folderMap.set('', currentFolderId); // root
+
+      // Collect all unique folder paths
+      const folderPaths = new Set<string>();
+      for (const file of acceptedFiles) {
+        const path = (file as any).webkitRelativePath;
+        if (path) {
+          const parts = path.split('/').slice(0, -1); // exclude filename
+          let currentPath = '';
+          for (const part of parts) {
+            currentPath += (currentPath ? '/' : '') + part;
+            folderPaths.add(currentPath);
+          }
+        }
+      }
+
+      // Create folders in order
+      const sortedPaths = Array.from(folderPaths).sort((a, b) => a.split('/').length - b.split('/').length);
+      for (const path of sortedPaths) {
+        const parts = path.split('/');
+        const name = parts[parts.length - 1];
+        const parentPath = parts.slice(0, -1).join('/');
+        const parentId = folderMap.get(parentPath) || currentFolderId;
+        try {
+          const folder = await folderService.createFolder(name, parentId);
+          folderMap.set(path, folder.id);
+        } catch (e: any) {
+          toast.error(`Failed to create folder ${name}`);
+        }
+      }
+
+      // Upload files
+      for (const file of acceptedFiles) {
+        const path = (file as any).webkitRelativePath;
+        const folderPath = path ? path.split('/').slice(0, -1).join('/') : '';
+        const folderId = folderMap.get(folderPath) || currentFolderId;
+        try {
+          await fileService.uploadFile(file, folderId, (p: number) => {
+            setUploadProgress((prev) => ({ ...prev, [file.name]: p }));
+          });
+          toast.success(`${file.name} uploaded`);
+        } catch (e: any) {
+          toast.error(e.response?.data?.message || `Failed to upload ${file.name}`);
+        }
       }
     }
+
     setUploadProgress({});
     loadContents();
   }, [currentFolderId]);
@@ -263,7 +319,7 @@ export default function Dashboard() {
           {(currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete') && (
             <label style={{ ...headerBtn('#6366f1', '#fff'), cursor: 'pointer' }}>
               ↑ Upload
-              <input type="file" multiple style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
+              <input type="file" multiple webkitdirectory style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
             </label>
           )}
         </div>
@@ -272,7 +328,7 @@ export default function Dashboard() {
         {isDragActive && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, fontSize: 24, fontWeight: 700, flexDirection: 'column', gap: 16 }}>
             <div style={{ fontSize: 64 }}>☁️</div>
-            <div>Drop files here to upload</div>
+            <div>Drop files or folders here to upload</div>
           </div>
         )}
 
