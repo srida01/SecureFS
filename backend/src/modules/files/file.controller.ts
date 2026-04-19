@@ -321,3 +321,25 @@ export const downloadFileVersion = async (req: AuthRequest, res: Response) => {
   await createAuditLog(req.userId!, 'download', fileId, 'file', { versionId });
   res.json({ success: true, data: { url, name: file.name, mimeType: file.mimeType } });
 };
+
+export const getFileAuditLogs = async (req: AuthRequest, res: Response) => {
+  const file = await prisma.file.findUnique({ where: { id: req.params.id } });
+  if (!file || file.isDeleted) throw new AppError(404, 'File not found');
+  
+  if (file.ownerId !== req.userId) {
+    const perm = await prisma.permission.findFirst({
+      where: { resourceId: file.id, granteeUserId: req.userId, isActive: true },
+    });
+    if (!perm) throw new AppError(403, 'Access denied');
+  }
+
+
+  const logs = await prisma.auditLog.findMany({
+    where: { resourceId: file.id, resourceType: 'file' },
+    include: { actor: { select: { clerkUserId: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+
+  res.json({ success: true, data: logs });
+};

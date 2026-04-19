@@ -10,6 +10,7 @@ import {
   downloadFolder,
   getDeletedFolders,
   batchDeleteFolders,
+  getFolderAuditLogs
 } from './folder.controller';
 
 export const folderRouter = Router();
@@ -20,6 +21,7 @@ folderRouter.post('/batch-delete', batchDeleteFolders);
 folderRouter.get('/', getFolders);
 folderRouter.get('/deleted', getDeletedFolders);
 folderRouter.get('/:id', getFolder);
+folderRouter.get('/:id/audit-logs', getFolderAuditLogs);
 folderRouter.patch('/:id', renameFolder);
 folderRouter.put('/:id/restore', restoreFolder);
 folderRouter.get('/:id/download', downloadFolder);

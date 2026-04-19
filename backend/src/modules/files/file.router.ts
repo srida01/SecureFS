@@ -14,6 +14,7 @@ import {
   downloadFileVersion,
   restoreFile,
   getDeletedFiles,
+  getFileAuditLogs
 } from './file.controller';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500 * 1024 * 1024 } }); // 500MB
@@ -30,6 +31,7 @@ fileRouter.get('/:id/download', downloadFile);
 fileRouter.get('/:id/versions', getFileVersions);
 fileRouter.get('/:id/versions/:versionId/download', downloadFileVersion);
 fileRouter.post('/:id/versions/:versionId/restore', restoreFileVersion);
+fileRouter.get('/:id/audit-logs', getFileAuditLogs);
 fileRouter.patch('/:id', renameFile);
 fileRouter.patch('/:id/restore', restoreFile);
 fileRouter.delete('/:id', deleteFile);

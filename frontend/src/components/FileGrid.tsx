@@ -4,6 +4,22 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import FilePreviewModal from './FilePreviewModal.tsx';
 import VersionHistoryModal from './VersionHistoryModal';
+import AuditLogsModal from './AuditLogsModal';
+import { fileService, folderService } from '../services/fileService';
+
+
+interface AuditLog {
+  id: string;
+  action: string;
+  resourceId: string;
+  resourceType: string;
+  status: string;
+  createdAt: string;
+  actor: {
+    clerkUserId: string;
+  };
+  metadata?: string;
+}
 
 interface Props {
   folders: any[];
@@ -47,7 +63,12 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
   const [renameType, setRenameType] = useState<'file' | 'folder'>('file');
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [versionFile, setVersionFile] = useState<any>(null);
-
+  const [auditLogsModal, setAuditLogsModal] = useState<{ isOpen: boolean; logs: AuditLog[]; resourceName: string; isLoading: boolean }>({
+    isOpen: false,
+  logs: [],
+  resourceName: '',
+  isLoading: false,
+});
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedItems);
     if (newSelected.has(id)) {
@@ -73,6 +94,21 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
   };
 
   const close = () => setContextMenu(null);
+  const handleViewAuditLogs = async (item: any, type: 'file' | 'folder') => {
+  try {
+    setAuditLogsModal((prev) => ({ ...prev, isOpen: true, isLoading: true, resourceName: item.name }));
+    
+    const logs = type === 'file' 
+      ? await fileService.getFileAuditLogs(item.id)
+      : await folderService.getFolderAuditLogs(item.id);
+    
+    setAuditLogsModal((prev) => ({ ...prev, logs: logs || [], isLoading: false }));
+  } catch (error) {
+    console.error('Failed to fetch audit logs:', error);
+    setAuditLogsModal((prev) => ({ ...prev, logs: [], isLoading: false }));
+    }
+  close();
+};
 
   const startRename = (item: any, type: 'file' | 'folder') => {
     setRenamingId(item.id);
@@ -255,6 +291,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
               <button onClick={() => { setVersionFile(contextMenu.item); close(); }} style={menuBtn}>
                 🕐 Version History
               </button>
+              <button onClick={() => { handleViewAuditLogs(contextMenu.item, contextMenu.type); }} style={menuBtn}>📋 Audit Logs</button>
             </>
           )}
           {contextMenu.type === 'folder' && (
@@ -279,6 +316,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
               🗑 Delete
             </button>
           )}
+          <button onClick={() => { handleViewAuditLogs(contextMenu.item, contextMenu.type); }} style={menuBtn}>📋 Audit Logs</button>
         </div>
       )}
 
@@ -289,8 +327,17 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
       {versionFile && (
         <VersionHistoryModal file={versionFile} onClose={() => { setVersionFile(null); onRefresh(); }} />
       )}
+      {/* Audit Logs Modal */}
+<AuditLogsModal 
+  isOpen={auditLogsModal.isOpen}
+  onClose={() => setAuditLogsModal((prev) => ({ ...prev, isOpen: false }))}
+  logs={auditLogsModal.logs}
+  resourceName={auditLogsModal.resourceName}
+  isLoading={auditLogsModal.isLoading}
+  />
     </div>
   );
+
 }
 
 const grid: React.CSSProperties = {
