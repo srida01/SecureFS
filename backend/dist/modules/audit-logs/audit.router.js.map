@@ -1,0 +1,1 @@
+{"version":3,"file":"audit.router.js","sourceRoot":"","sources":["../../../src/modules/audit-logs/audit.router.ts"],"names":[],"mappings":";;;AAAA,qCAAiC;AACjC,gEAA6D;AAC7D,yDAAuE;AAE1D,QAAA,WAAW,GAAG,IAAA,gBAAM,GAAE,CAAC;AACpC,mBAAW,CAAC,GAAG,CAAC,2BAAY,CAAC,CAAC;AAC9B,mBAAW,CAAC,GAAG,CAAC,KAAK,EAAE,iCAAc,CAAC,CAAC;AACvC,mBAAW,CAAC,GAAG,CAAC,YAAY,EAAE,oCAAiB,CAAC,CAAC"}

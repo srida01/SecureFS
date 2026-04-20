@@ -9,6 +9,8 @@ import SignUpPage from './pages/SignUpPage.tsx';
 import UserSettings from './pages/UserSettings.tsx';
 import SharedWithMe from './pages/SharedWithMe.tsx';
 import SharedByMe from './pages/SharedByMe.tsx';
+import Trash from './pages/Trash.tsx';
+import SharedPage from './pages/SharedPage.tsx';
 import { setupAxiosInterceptor } from './services/api';
 
 function AuthInterceptorSetup() {
@@ -34,6 +36,9 @@ function App() {
         <AuthInterceptorSetup />
       </SignedIn>
       <Routes>
+        {/* Public routes */}
+        <Route path="/shared/:token" element={<SharedPage />} />
+        
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/sign-up" element={<SignUpPage />} />
         <Route
@@ -47,6 +52,7 @@ function App() {
                   <Route path="/settings" element={<UserSettings />} />
                   <Route path="/shared" element={<SharedWithMe />} />
                   <Route path="/shared-by-me" element={<SharedByMe />} />
+                  <Route path="/trash" element={<Trash />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </SignedIn>

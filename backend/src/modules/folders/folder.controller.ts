@@ -194,7 +194,7 @@ export const deleteFolder = async (req: AuthRequest, res: Response) => {
       ownerId: req.userId!,
       isDeleted: false,
     },
-    select: { id: true, sizeBytes: true },
+    select: { id: true,name: true, sizeBytes: true },
   });
   const totalSize = filesToDelete.reduce((sum, f) => sum + f.sizeBytes, BigInt(0));
 
@@ -213,7 +213,18 @@ export const deleteFolder = async (req: AuthRequest, res: Response) => {
     data: { usedBytes: { decrement: totalSize } },
   });
 
-  await createAuditLog(req.userId!, 'delete', folder.id, 'folder', { name: folder.name, deletedFiles: filesToDelete.length });
+const deletedFilesList = filesToDelete.map(f => ({
+  id: f.id,
+  name: f.name,
+}));
+
+await createAuditLog(req.userId!, 'delete', folder.id, 'folder', { 
+  name: folder.name,
+  deletedFilesCount: filesToDelete.length,
+  deletedFolderCount: allFolderIds.length,
+  deletedFiles: deletedFilesList,
+  totalDeletedSize: totalSize.toString(),
+});
   res.json({ success: true, message: 'Folder deleted with contents moved to trash' });
 };
 
@@ -279,7 +290,7 @@ export const downloadFolder = async (req: AuthRequest, res: Response) => {
   res.setHeader('Content-Type', 'application/zip');
 
   const archive = archiver('zip', { zlib: { level: 9 } });
-  archive.on('error', (err) => {
+  archive.on('error', (err:any) => {
     throw err;
   });
 
@@ -323,7 +334,11 @@ export const batchDeleteFolders = async (req: AuthRequest, res: Response) => {
     data: { isDeleted: true },
   });
 
-  await createAuditLog(req.userId!, 'delete', '', 'folder', { count: ids.length });
+  const folderDetails = folders.map(f => ({ id: f.id, name: f.name }));
+await createAuditLog(req.userId!, 'delete', '', 'folder', { 
+  count: ids.length,
+  folders: folderDetails 
+});
   res.json({ success: true, message: `${ids.length} folders deleted` });
 };
 export const getFolderAuditLogs = async (req: AuthRequest, res: Response) => {

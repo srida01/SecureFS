@@ -164,7 +164,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
                 }}
                 style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
               >
-                🗑 Delete Selected
+                🗑 Move to Trash
               </button>
             )}
             <button
@@ -291,7 +291,6 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
               <button onClick={() => { setVersionFile(contextMenu.item); close(); }} style={menuBtn}>
                 🕐 Version History
               </button>
-              <button onClick={() => { handleViewAuditLogs(contextMenu.item, contextMenu.type); }} style={menuBtn}>📋 Audit Logs</button>
             </>
           )}
           {contextMenu.type === 'folder' && (
@@ -307,16 +306,18 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
           <button onClick={() => { onShare(contextMenu.item); close(); }} style={menuBtn}>
             🔗 Share
           </button>
+          <button onClick={() => { handleViewAuditLogs(contextMenu.item, contextMenu.type); }} style={menuBtn}>
+            📋 Audit Logs
+          </button>
           <div style={{ height: 1, background: '#334155', margin: '4px 0' }} />
           {canDelete && (
             <button
               onClick={() => { onDelete(contextMenu.type, contextMenu.item.id); close(); }}
               style={{ ...menuBtn, color: '#ef4444' }}
             >
-              🗑 Delete
+              🗑 Move to Trash
             </button>
           )}
-          <button onClick={() => { handleViewAuditLogs(contextMenu.item, contextMenu.type); }} style={menuBtn}>📋 Audit Logs</button>
         </div>
       )}
 

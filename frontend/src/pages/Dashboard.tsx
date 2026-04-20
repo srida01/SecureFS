@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [breadcrumbs, setBreadcrumbs] = useState<{ id: string; name: string }[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [sharedReturnPath, setSharedReturnPath] = useState<string | null>(null);
+  const [isViewingSharedItem, setIsViewingSharedItem] = useState(false);
   const [currentFolderPermission, setCurrentFolderPermission] = useState<string | null>(null);
 
   // Sync user on mount
@@ -47,6 +48,58 @@ export default function Dashboard() {
       // Support navigating here with a pre-selected folder (e.g. from SharedWithMe)
       const state = location.state as any;
       const targetFolderId = state?.folderId;
+      const targetFileId = state?.fileId;
+      
+      // Check for pending share token from sign-in
+      const pendingShareToken = localStorage.getItem('pendingShareToken');
+      const pendingSharePassword = localStorage.getItem('pendingSharePassword');
+      const pendingShareData = localStorage.getItem('pendingShareData');
+      
+      if (pendingShareToken) {
+        // Clear the stored tokens
+        localStorage.removeItem('pendingShareToken');
+        localStorage.removeItem('pendingSharePassword');
+        localStorage.removeItem('pendingShareData');
+        
+        // Claim access to the shared resource
+        try {
+          await api.post(`/share-links/${pendingShareToken}/claim`, {}, { 
+            headers: { Authorization: `Bearer ${token}` } 
+          });
+          toast.success('Shared access granted!');
+          
+          // Navigate to the shared resource using stored data
+          if (pendingShareData) {
+            const shareData = JSON.parse(pendingShareData);
+            setIsViewingSharedItem(true);
+            if (shareData.shareLink.resourceType === 'file') {
+              // For files, navigate to the folder containing the file and select it
+              dispatch(setCurrentFolder(shareData.resource.folderId));
+              setTimeout(() => setSelectedItems(new Set([shareData.resource.id])), 500);
+            } else {
+              // For folders, navigate directly to that folder
+              dispatch(setCurrentFolder(shareData.resource.id));
+            }
+            return;
+          }
+        } catch (e: any) {
+          toast.error('Failed to claim shared access');
+        }
+      }
+
+      if (targetFileId) {
+        // Find the folder containing this file and navigate to it
+        try {
+          const fileDetails = await fileService.getFile(targetFileId);
+          dispatch(setCurrentFolder(fileDetails.folderId));
+          // Select the file after contents load
+          setTimeout(() => setSelectedItems(new Set([targetFileId])), 500);
+          return;
+        } catch (e) {
+          toast.error('Could not access the shared file');
+        }
+      }
+
       if (targetFolderId) {
         dispatch(setCurrentFolder(targetFolderId));
         if (state?.fromSharedPage) setSharedReturnPath('/shared');
@@ -188,15 +241,14 @@ export default function Dashboard() {
     try {
       if (type === 'file') await fileService.deleteFile(id);
       else await folderService.deleteFolder(id);
-      toast.success(`${type} deleted`);
+      toast.success(`${type === 'file' ? 'File' : 'Folder'} moved to trash`);
       loadContents();
     } catch {
-      toast.error('Delete failed');
+      toast.error('Failed to move to trash');
     }
   };
 
   const handleBatchDelete = async (ids: string[], type: 'file' | 'folder') => {
-    if (!window.confirm(`Delete ${ids.length} ${type}(s)? This cannot be undone.`)) return;
     try {
       const token = await getToken();
       await api.post(
@@ -204,11 +256,11 @@ export default function Dashboard() {
         { ids },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`${ids.length} ${type}(s) deleted`);
+      toast.success(`${ids.length} ${type}(s) moved to trash`);
       setSelectedItems(new Set());
       loadContents();
     } catch {
-      toast.error('Batch delete failed');
+      toast.error('Failed to move items to trash');
     }
   };
 
@@ -239,6 +291,7 @@ export default function Dashboard() {
           <NavItem label="📁 My Files" active={location.pathname === '/'} onClick={() => navigate('/')} />
           <NavItem label="🔗 Shared with Me" active={location.pathname === '/shared'} onClick={() => navigate('/shared')} />
           <NavItem label="🔐 Shared by You" active={location.pathname === '/shared-by-me'} onClick={() => navigate('/shared-by-me')} />
+          <NavItem label="🗑️ Trash" active={location.pathname === '/trash'} onClick={() => navigate('/trash')} />
           <NavItem label="⚙️ Settings" active={location.pathname === '/settings'} onClick={() => navigate('/settings')} />
           {userProfile?.role === 'admin' && (
             <NavItem label="🛡 Admin Panel" active={location.pathname === '/admin'} onClick={() => navigate('/admin')} />
@@ -280,26 +333,15 @@ export default function Dashboard() {
           </div>
 
           {/* Actions */}
-          {sharedReturnPath && (
+          {isViewingSharedItem && (
             <button
               onClick={() => {
-                navigate(sharedReturnPath);
-                setSharedReturnPath(null);
+                setIsViewingSharedItem(false);
+                navigate('/shared');
               }}
               style={headerBtn('#334155', '#fff')}
             >
-              ← Back to shared
-            </button>
-          )}
-            {sharedReturnPath && (
-            <button
-              onClick={() => {
-                navigate(sharedReturnPath);
-                setSharedReturnPath(null);
-              }}
-              style={headerBtn('#334155', '#fff')}
-            >
-              ← Back to shared
+              ← Back to Shared with me
             </button>
           )}
           <button
@@ -317,10 +359,16 @@ export default function Dashboard() {
             </button>
           )}
           {(currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete') && (
-            <label style={{ ...headerBtn('#6366f1', '#fff'), cursor: 'pointer' }}>
-              ↑ Upload
-              <input type="file" multiple webkitdirectory style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
-            </label>
+            <>
+              <label style={{ ...headerBtn('#6366f1', '#fff'), cursor: 'pointer' }}>
+                ↑ Upload Files
+                <input type="file" multiple accept="*/*" style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
+              </label>
+              <label style={{ ...headerBtn('#8b5cf6', '#fff'), cursor: 'pointer' }}>
+                📁 Upload Folder
+                <input type="file" multiple webkitdirectory="" style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
+              </label>
+            </>
           )}
         </div>
 
