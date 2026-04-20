@@ -35,15 +35,15 @@ const ACTION_ICONS: Record<string, string> = {
 }
 ;
 const ACTION_COLORS: Record<string, string> = {
- 'upload': '#3b82f6',
- 'download': '#10b981',
- 'delete': '#ef4444',
- 'view': '#8b5cf6',
- 'edit': '#f59e0b',
- 'share': '#06b6d4',
- 'login': '#10b981',
- 'logout': '#6366f1',
- 'denied': '#ef4444',}
+ 'upload': 'var(--accent-purple)',
+ 'download': 'var(--accent-teal)',
+ 'delete': 'var(--accent-coral)',
+ 'view': 'var(--accent-lavender)',
+ 'edit': 'var(--accent-amber)',
+ 'share': 'var(--accent-teal)',
+ 'login': 'var(--accent-teal)',
+ 'logout': 'var(--accent-purple)',
+ 'denied': 'var(--accent-coral)',}
 ;
 export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, isLoading }: Props) {
  if (!isOpen) return null;
@@ -58,7 +58,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
      second: '2-digit',
    });
  };
- const getActionColor = (action: string) => ACTION_COLORS[action] || '#64748b';
+ const getActionColor = (action: string) => ACTION_COLORS[action] || 'var(--text-muted)';
  const getActionIcon = (action: string) => ACTION_ICONS[action] || '📋';
  const getMetadata = (metadata?: string) => {
    if (!metadata) return null;
@@ -83,9 +83,9 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
    >
      <div
        style={{
-         background: '#0f172a',
+         background: 'var(--surface)',
          borderRadius: 12,
-         border: '1px solid #334155',
+         border: '1px solid var(--border)',
          maxWidth: 700,
          width: '90%',
          maxHeight: '80vh',
@@ -100,13 +100,13 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
        <div
          style={{
            padding: 20,
-           borderBottom: '1px solid #334155',
+           borderBottom: '1px solid var(--border)',
            display: 'flex',
            justifyContent: 'space-between',
            alignItems: 'center',
          }}
        >
-         <h2 style={{ margin: 0, color: '#e2e8f0', fontSize: 18, fontWeight: 600 }}>
+         <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: 18, fontWeight: 600 }}>
            📋 Audit Logs: {resourceName}
          </h2>
          <button
@@ -114,7 +114,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
            style={{
              background: 'none',
              border: 'none',
-             color: '#94a3b8',
+             color: 'var(--text-secondary)',
              cursor: 'pointer',
              fontSize: 24,
            }}
@@ -137,7 +137,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
                alignItems: 'center',
                justifyContent: 'center',
                height: 300,
-               color: '#94a3b8',
+               color: 'var(--text-secondary)',
              }}
            >
              ⏳ Loading audit logs...
@@ -150,7 +150,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
                alignItems: 'center',
                justifyContent: 'center',
                height: 300,
-               color: '#64748b',
+               color: 'var(--text-muted)',
              }}
            >
              <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
@@ -164,7 +164,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
                  <div
                    key={log.id}
                    style={{
-                     background: '#1e293b',
+                     background: 'var(--bg-base)',
                      border: `2px solid ${getActionColor(log.action)}`,
                      borderRadius: 8,
                      padding: 12,
@@ -207,10 +207,10 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
   style={{
     color:
       log.status === 'success'
-        ? '#10b981'
+        ? 'var(--accent-teal)'
         : log.status === 'failure'
-        ? '#ef4444'
-        : '#64748b',
+        ? 'var(--accent-coral)'
+        : 'var(--text-muted)ext-muted)',
     fontSize: 12,
     marginLeft: 8,
   }}
@@ -219,7 +219,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
 </span>
                          <span
                            style={{
-                             color: log.resourceType === 'file' ? '#3b82f6' : '#8b5cf6',
+                             color: log.resourceType === 'file' ? 'var(--accent-teal)' : 'var(--accent-purple)',
                              fontSize: 12,
                              marginLeft: 8,
                            }}
@@ -229,7 +229,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
                        </div>
                        <div
                          style={{
-                           color: '#94a3b8',
+                           color: 'var(--text-secondary)',
                            fontSize: 12,
                            textAlign: 'right',
                          }}
@@ -237,17 +237,17 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
                          {formatDate(log.createdAt)}
                        </div>
                      </div>
-                     <div style={{ color: '#cbd5e1', fontSize: 13 }}>
-                       By: <span style={{ color: '#e2e8f0', fontWeight: 500 }}>{log.actor.clerkUserId}</span>
+                     <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                       By: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{log.actor.clerkUserId}</span>
                      </div>
                      {metadata && (
                        <div
                          style={{
-                           color: '#94a3b8',
+                           color: 'var(--text-secondary)',
                            fontSize: 12,
                            marginTop: 8,
                            padding: 8,
-                           background: '#0f172a',
+                           background: 'var(--bg-page)',
                            borderRadius: 4,
                            fontFamily: 'monospace',
                            overflow: 'hidden',
@@ -255,7 +255,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
                          }}
                        >
                          <details>
-                           <summary style={{ cursor: 'pointer', color: '#cbd5e1' }}>
+                           <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>
                              View Details
                            </summary>
                            <pre
@@ -283,7 +283,7 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
        <div
          style={{
            padding: 16,
-           borderTop: '1px solid #334155',
+           borderTop: '1px solid var(--border)',
            textAlign: 'right',
          }}
        >
@@ -291,20 +291,20 @@ export default function AuditLogsModal({ isOpen, onClose, logs, resourceName, is
            onClick={onClose}
            style={{
              padding: '8px 16px',
-             background: '#334155',
+             background: 'var(--border)',
              border: 'none',
              borderRadius: 6,
-             color: '#e2e8f0',
+             color: 'var(--text-primary)',
              cursor: 'pointer',
              fontSize: 14,
              fontWeight: 500,
              transition: 'all 0.2s',
            }}
            onMouseOver={(e) => {
-             e.currentTarget.style.background = '#475569';
+             e.currentTarget.style.background = 'var(--border-light)';
            }}
            onMouseOut={(e) => {
-             e.currentTarget.style.background = '#334155';
+             e.currentTarget.style.background = 'var(--border)';
            }}
          >
            Close

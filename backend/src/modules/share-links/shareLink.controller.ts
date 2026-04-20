@@ -288,3 +288,124 @@ export const claimSharedAccess = async (req: AuthRequest, res: Response) => {
 
   res.json({ success: true, message: 'Access granted', data: permission });
 };
+
+export const getSharedFolderContents = async (req: AuthRequest, res: Response) => {
+  const { token } = req.params;
+  const { password, folderId } = req.query;
+
+  // 🔍 Find share link
+  const link = await prisma.shareLink.findUnique({
+    where: { token },
+  });
+
+  // ❌ Invalid / expired / inactive
+  if (
+    !link ||
+    !link.isActive ||
+    (link.expiresAt && link.expiresAt < new Date())
+  ) {
+    throw new AppError(404, 'Share link expired or invalid');
+  }
+
+  // Only folders have contents
+  if (link.resourceType !== 'folder') {
+    throw new AppError(400, 'This endpoint is for folders only');
+  }
+
+  // 🔐 Password protection
+  if (link.passwordHash) {
+    if (!password) {
+      throw new AppError(401, 'Password required to access this link');
+    }
+
+    const isValid = await bcrypt.compare(
+      String(password),
+      link.passwordHash
+    );
+
+    if (!isValid) {
+      throw new AppError(401, 'Incorrect password');
+    }
+  }
+
+  // 📦 Determine which folder to show (shared root or subfolder)
+  const targetFolderId = folderId ? String(folderId) : link.resourceId;
+  
+  // If requesting a subfolder, verify it's within the shared folder's hierarchy
+  if (folderId && folderId !== link.resourceId) {
+    const subfolder = await prisma.folder.findUnique({
+      where: { id: targetFolderId },
+    });
+    
+    if (!subfolder) {
+      throw new AppError(404, 'Subfolder not found');
+    }
+
+    // Verify the subfolder is a descendant of the shared folder
+    const sharedRootFolder = await prisma.folder.findUnique({
+      where: { id: link.resourceId },
+    });
+
+    if (!sharedRootFolder) {
+      throw new AppError(404, 'Shared folder not found');
+    }
+
+    // Check if subfolder path starts with shared folder's path
+    if (!subfolder.path.startsWith(sharedRootFolder.path)) {
+      throw new AppError(403, 'Access denied - folder is outside shared scope');
+    }
+  }
+
+  const folder = await prisma.folder.findUnique({
+    where: { id: targetFolderId },
+  });
+
+  if (!folder) {
+    throw new AppError(404, 'Folder not found');
+  }
+
+  // Get direct children (files and subfolders)
+  const [childFiles, childFolders] = await Promise.all([
+    prisma.file.findMany({
+      where: {
+        folderId: folder.id,
+        isDeleted: false,
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.folder.findMany({
+      where: {
+        parentFolderId: folder.id,
+        isDeleted: false,
+      },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
+
+  // Build breadcrumb path
+  let breadcrumbs: Array<{ id: string; name: string }> = [];
+  let currentFolder = folder;
+  
+  while (currentFolder) {
+    breadcrumbs.unshift({ id: currentFolder.id, name: currentFolder.name });
+    if (currentFolder.parentFolderId) {
+      currentFolder = await prisma.folder.findUnique({
+        where: { id: currentFolder.parentFolderId },
+      });
+    } else {
+      break;
+    }
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      folder,
+      files: childFiles,
+      subfolders: childFolders,
+      breadcrumbs,
+      shareToken: token,
+      sharedRootId: link.resourceId,
+    },
+  });
+};

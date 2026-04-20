@@ -76,10 +76,10 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
       <div style={modal}>
         <div style={header}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 18, color: '#e2e8f0' }}>
+            <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--text-primary)' }}>
               Version History
             </div>
-            <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{file.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{file.name}</div>
           </div>
           <button onClick={onClose} style={closeBtn}>✕</button>
         </div>
@@ -87,12 +87,12 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
         {loading ? (
           <div style={emptyState}>
             <div style={spinner} />
-            <span style={{ color: '#64748b', fontSize: 14 }}>Loading versions...</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Loading versions...</span>
           </div>
         ) : versions.length === 0 ? (
           <div style={emptyState}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-            <div style={{ color: '#64748b', fontSize: 14 }}>No previous versions found</div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>No previous versions found</div>
           </div>
         ) : (
           <div style={{ overflow: 'auto', maxHeight: 420 }}>
@@ -104,8 +104,8 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
                   alignItems: 'center',
                   gap: 16,
                   padding: '14px 20px',
-                  borderBottom: '1px solid #1e293b',
-                  background: i === 0 ? '#0f2027' : 'transparent',
+                  borderBottom: '1px solid var(--border)',
+                  background: i === 0 ? 'var(--bg-base)' : 'transparent',
                 }}
               >
                 {/* Version badge */}
@@ -114,13 +114,13 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
                     minWidth: 40,
                     height: 40,
                     borderRadius: 8,
-                    background: i === 0 ? '#6366f1' : '#334155',
+                    background: i === 0 ? 'var(--accent-purple)' : 'var(--border)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 700,
                     fontSize: 13,
-                    color: '#fff',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   v{v.versionNumber || versions.length - i}
@@ -129,19 +129,19 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
                 {/* Info */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                       {i === 0 ? 'Current version' : `Version ${v.versionNumber || versions.length - i}`}
                     </span>
                     {i === 0 && (
-                      <span style={{ fontSize: 10, background: '#6366f120', color: '#818cf8', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                      <span style={{ fontSize: 10, background: 'var(--accent-purple-bg)', color: 'var(--accent-purple)', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
                         LATEST
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                     {new Date(v.createdAt).toLocaleString()} · {fmtBytes(Number(v.sizeBytes || 0))}
                     {v.checksum && (
-                      <span style={{ marginLeft: 8, fontFamily: 'monospace', color: '#334155' }}>
+                      <span style={{ marginLeft: 8, fontFamily: 'monospace', color: 'var(--border)' }}>
                         {v.checksum.slice(0, 8)}…
                       </span>
                     )}
@@ -152,7 +152,7 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={() => downloadVersion(v.id, v.versionNumber || versions.length - i)}
-                    style={actionBtn('#0f172a', '#94a3b8')}
+                    style={actionBtn('var(--bg-base)', 'var(--text-secondary)')}
                   >
                     ⬇ Download
                   </button>
@@ -160,7 +160,7 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
                     <button
                       onClick={() => restoreVersion(v.id)}
                       disabled={restoring === v.id}
-                      style={actionBtn('#6366f120', '#818cf8')}
+                      style={actionBtn('var(--accent-purple-bg)', 'var(--accent-purple)')}
                     >
                       {restoring === v.id ? '...' : '↩ Restore'}
                     </button>
@@ -171,8 +171,8 @@ export default function VersionHistoryModal({ file, onClose }: Props) {
           </div>
         )}
 
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '8px 20px', background: '#334155', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '8px 20px', background: 'var(--border)', color: 'var(--text-primary)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
             Close
           </button>
         </div>
@@ -186,15 +186,15 @@ const overlay: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400,
 };
 const modal: React.CSSProperties = {
-  background: '#1e293b', borderRadius: 14, width: 600, maxWidth: '95vw',
-  border: '1px solid #334155', overflow: 'hidden',
+  background: 'var(--surface)', borderRadius: 14, width: 600, maxWidth: '95vw',
+  border: '1px solid var(--border)', overflow: 'hidden',
 };
 const header: React.CSSProperties = {
   display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-  padding: '20px 20px 16px', borderBottom: '1px solid #334155',
+  padding: '20px 20px 16px', borderBottom: '1px solid var(--border)',
 };
 const closeBtn: React.CSSProperties = {
-  background: 'none', border: 'none', color: '#64748b',
+  background: 'none', border: 'none', color: 'var(--text-muted)',
   cursor: 'pointer', fontSize: 18, lineHeight: 1,
 };
 const emptyState: React.CSSProperties = {
@@ -202,8 +202,8 @@ const emptyState: React.CSSProperties = {
   justifyContent: 'center', padding: 48,
 };
 const spinner: React.CSSProperties = {
-  width: 28, height: 28, border: '3px solid #334155',
-  borderTopColor: '#6366f1', borderRadius: '50%',
+  width: 28, height: 28, border: '3px solid var(--border)',
+  borderTopColor: 'var(--accent-purple)', borderRadius: '50%',
   animation: 'spin 0.8s linear infinite', marginBottom: 12,
 };
 function actionBtn(bg: string, color: string): React.CSSProperties {

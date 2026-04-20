@@ -273,13 +273,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div {...getRootProps()} style={{ display: 'flex', height: '100vh', background: '#0f172a', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif' }}>
+    <div {...getRootProps()} style={{ display: 'flex', height: '100vh', background: 'var(--bg-page)', color: 'var(--text-primary)', fontFamily: 'system-ui, sans-serif' }}>
       <input {...getInputProps()} />
 
       {/* Sidebar */}
-      <div style={{ width: 260, background: '#1e293b', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, borderRight: '1px solid #334155', flexShrink: 0 }}>
+      <div style={{ width: 260, background: 'var(--surface)', padding: 20, display: 'flex', flexDirection: 'column', gap: 20, borderRight: '1px solid var(--border)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18 }}>☁</div>
+          <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, var(--accent-purple), var(--accent-lavender))', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18 }}>☁</div>
           <span style={{ fontWeight: 700, fontSize: 16 }}>CloudStore</span>
         </div>
 
@@ -287,7 +287,7 @@ export default function Dashboard() {
 
         {/* Sidebar nav */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 10, color: '#334155', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Navigation</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Navigation</div>
           <NavItem label="📁 My Files" active={location.pathname === '/'} onClick={() => navigate('/')} />
           <NavItem label="🔗 Shared with Me" active={location.pathname === '/shared'} onClick={() => navigate('/shared')} />
           <NavItem label="🔐 Shared by You" active={location.pathname === '/shared-by-me'} onClick={() => navigate('/shared-by-me')} />
@@ -302,7 +302,7 @@ export default function Dashboard() {
 
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <UserButton />
-          <span style={{ fontSize: 12, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {clerkUser?.emailAddresses[0]?.emailAddress}
           </span>
         </div>
@@ -311,17 +311,17 @@ export default function Dashboard() {
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Topbar */}
-        <div style={{ padding: '12px 24px', borderBottom: '1px solid #1e293b', display: 'flex', gap: 12, alignItems: 'center', background: '#0f172a' }}>
+        <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 12, alignItems: 'center', background: 'var(--bg-page)' }}>
           {/* Breadcrumbs */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
             {breadcrumbs.map((b, i) => (
               <React.Fragment key={b.id}>
-                {i > 0 && <span style={{ color: '#334155', fontSize: 16 }}>›</span>}
+                {i > 0 && <span style={{ color: 'var(--text-muted)', fontSize: 16 }}>›</span>}
                 <button
                   onClick={() => navigateBreadcrumb(b.id, i)}
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer',
-                    color: i === breadcrumbs.length - 1 ? '#e2e8f0' : '#475569',
+                    color: i === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)',
                     fontWeight: i === breadcrumbs.length - 1 ? 600 : 400,
                     fontSize: 14, padding: '2px 4px', borderRadius: 4,
                   }}
@@ -339,32 +339,32 @@ export default function Dashboard() {
                 setIsViewingSharedItem(false);
                 navigate('/shared');
               }}
-              style={headerBtn('#334155', '#fff')}
+              style={headerBtn('var(--surface)', 'var(--text-primary)')}
             >
               ← Back to Shared with me
             </button>
           )}
           <button
             onClick={() => setShowSearch(true)}
-            style={headerBtn('#1e293b', '#64748b')}
+            style={headerBtn('var(--elevated)', 'var(--text-secondary)')}
           >
             🔍 Search
           </button>
           {(currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete') && (
             <button
               onClick={() => setShowNewFolder(true)}
-              style={headerBtn('#1e293b', '#64748b')}
+              style={headerBtn('var(--elevated)', 'var(--text-secondary)')}
             >
               + New Folder
             </button>
           )}
           {(currentFolderPermission === 'owner' || currentFolderPermission === 'edit' || currentFolderPermission === 'delete') && (
             <>
-              <label style={{ ...headerBtn('#6366f1', '#fff'), cursor: 'pointer' }}>
+              <label style={{ ...headerBtn('var(--accent-purple)', 'var(--text-primary)'), cursor: 'pointer' }}>
                 ↑ Upload Files
                 <input type="file" multiple accept="*/*" style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
               </label>
-              <label style={{ ...headerBtn('#8b5cf6', '#fff'), cursor: 'pointer' }}>
+              <label style={{ ...headerBtn('var(--accent-lavender)', 'var(--text-primary)'), cursor: 'pointer' }}>
                 📁 Upload Folder
                 <input type="file" multiple {...({ webkitdirectory: '' } as any)} style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
               </label>
@@ -382,14 +382,14 @@ export default function Dashboard() {
 
         {/* Upload progress */}
         {Object.entries(uploadProgress).length > 0 && (
-          <div style={{ padding: '8px 24px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
+          <div style={{ padding: '8px 24px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
             {Object.entries(uploadProgress).map(([name, pct]) => (
               <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: '#94a3b8', minWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
-                <div style={{ flex: 1, background: '#334155', borderRadius: 4, height: 4 }}>
-                  <div style={{ width: `${pct}%`, background: '#6366f1', height: 4, borderRadius: 4, transition: 'width 0.2s' }} />
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', minWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                <div style={{ flex: 1, background: 'var(--border)', borderRadius: 4, height: 4 }}>
+                  <div style={{ width: `${pct}%`, background: 'var(--accent-purple)', height: 4, borderRadius: 4, transition: 'width 0.2s' }} />
                 </div>
-                <span style={{ fontSize: 11, color: '#64748b', width: 32, textAlign: 'right' }}>{pct}%</span>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', width: 32, textAlign: 'right' }}>{pct}%</span>
               </div>
             ))}
           </div>
@@ -397,17 +397,17 @@ export default function Dashboard() {
 
         {/* New folder input */}
         {showNewFolder && (
-          <div style={{ padding: '8px 24px', background: '#1e293b', display: 'flex', gap: 8, borderBottom: '1px solid #334155' }}>
+          <div style={{ padding: '8px 24px', background: 'var(--surface)', display: 'flex', gap: 8, borderBottom: '1px solid var(--border)' }}>
             <input
               autoFocus
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') createFolder(); if (e.key === 'Escape') setShowNewFolder(false); }}
               placeholder="Folder name..."
-              style={{ flex: 1, padding: '6px 12px', background: '#0f172a', border: '1px solid #6366f1', color: '#e2e8f0', borderRadius: 6, fontSize: 13 }}
+              style={{ flex: 1, padding: '6px 12px', background: 'var(--bg-page)', border: '1px solid var(--accent-purple)', color: 'var(--text-primary)', borderRadius: 6, fontSize: 13 }}
             />
-            <button onClick={createFolder} style={{ padding: '6px 14px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Create</button>
-            <button onClick={() => setShowNewFolder(false)} style={{ padding: '6px 14px', background: '#475569', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={createFolder} style={{ padding: '6px 14px', background: 'var(--accent-teal)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Create</button>
+            <button onClick={() => setShowNewFolder(false)} style={{ padding: '6px 14px', background: 'var(--text-muted)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
           </div>
         )}
 
@@ -461,8 +461,8 @@ function NavItem({ label, active, onClick }: { label: string; active?: boolean; 
       style={{
         display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px',
         borderRadius: 6, cursor: 'pointer', fontSize: 13, border: 'none',
-        background: active ? '#6366f120' : 'transparent',
-        color: active ? '#818cf8' : '#64748b',
+        background: active ? 'var(--accent-bg)' : 'transparent',
+        color: active ? 'var(--accent-purple)' : 'var(--text-secondary)',
         fontWeight: active ? 600 : 400,
       }}
     >
@@ -473,7 +473,7 @@ function NavItem({ label, active, onClick }: { label: string; active?: boolean; 
 
 function headerBtn(bg: string, color: string): React.CSSProperties {
   return {
-    padding: '7px 14px', background: bg, color, border: `1px solid #334155`,
+    padding: '7px 14px', background: bg, color, border: `1px solid var(--border)`,
     borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13,
     display: 'inline-flex', alignItems: 'center', gap: 6,
   };

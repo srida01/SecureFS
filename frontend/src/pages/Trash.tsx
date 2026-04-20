@@ -197,9 +197,9 @@ export default function Trash() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f172a' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
       {/* Sidebar */}
-      <div style={{ flex: '0 0 250px', borderRight: '1px solid #1e293b', padding: '20px', background: '#0f172a', color: '#cbd5e1' }}>
+      <div style={{ flex: '0 0 250px', borderRight: '1px solid var(--border)', padding: '20px', background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Trash</h1>
           <UserButton />
@@ -212,7 +212,7 @@ export default function Trash() {
             cursor: 'pointer',
             fontSize: 14,
             background: 'transparent',
-            color: '#cbd5e1',
+            color: 'var(--text-primary)',
             marginBottom: 10,
             border: 'none',
           }}
@@ -225,8 +225,8 @@ export default function Trash() {
       <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{ marginBottom: '30px' }}>
-            <h2 style={{ fontSize: 28, fontWeight: 700, color: '#f1f5f9', margin: 0, marginBottom: 10 }}>🗑️ Trash</h2>
-            <p style={{ color: '#94a3b8', margin: 0 }}>{trashItems.length} item(s) in trash</p>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', margin: 0, marginBottom: 10 }}>🗑️ Trash</h2>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{trashItems.length} item(s) in trash</p>
           </div>
 
           {/* Action Bar */}
@@ -237,9 +237,9 @@ export default function Trash() {
                 style={{
                   padding: '8px 16px',
                   borderRadius: 6,
-                  border: '1px solid #475569',
-                  background: selectedItems.size === trashItems.length ? '#6366f1' : 'transparent',
-                  color: '#f1f5f9',
+                  border: '1px solid var(--border-light)',
+                  background: selectedItems.size === trashItems.length ? 'var(--accent-purple)' : 'transparent',
+                  color: 'var(--text-primary)',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: 600,
@@ -255,9 +255,9 @@ export default function Trash() {
                     style={{
                       padding: '8px 16px',
                       borderRadius: 6,
-                      border: '1px solid #10b981',
-                      background: '#10b981',
-                      color: '#fff',
+                      border: '1px solid var(--accent-teal)',
+                      background: 'var(--accent-teal)',
+                      color: 'var(--text-primary)',
                       cursor: 'pointer',
                       fontSize: 13,
                       fontWeight: 600,
@@ -270,9 +270,9 @@ export default function Trash() {
                     style={{
                       padding: '8px 16px',
                       borderRadius: 6,
-                      border: '1px solid #ef4444',
-                      background: '#ef4444',
-                      color: '#fff',
+                      border: '1px solid var(--accent-coral)',
+                      background: 'var(--accent-coral)',
+                      color: 'var(--text-primary)',
                       cursor: 'pointer',
                       fontSize: 13,
                       fontWeight: 600,
@@ -288,9 +288,9 @@ export default function Trash() {
                 style={{
                   padding: '8px 16px',
                   borderRadius: 6,
-                  border: '1px solid #8b5cf6',
-                  background: '#8b5cf6',
-                  color: '#fff',
+                  border: '1px solid var(--accent-lavender)',
+                  background: 'var(--accent-lavender)',
+                  color: 'var(--text-primary)',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: 600,
@@ -305,7 +305,7 @@ export default function Trash() {
           {/* Sort Bar */}
           {trashItems.length > 0 && (
             <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-              <label style={{ fontSize: 13, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 Sort by:
                 <select
                   value={sortBy}
@@ -313,9 +313,9 @@ export default function Trash() {
                   style={{
                     padding: '6px 10px',
                     borderRadius: 4,
-                    border: '1px solid #475569',
-                    background: '#1e293b',
-                    color: '#f1f5f9',
+                    border: '1px solid var(--border-light)',
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
                     cursor: 'pointer',
                     fontSize: 13,
                   }}
@@ -329,20 +329,20 @@ export default function Trash() {
           )}
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
               <p>Loading trash...</p>
             </div>
           ) : trashItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 40px', background: '#1e293b', borderRadius: 8, color: '#94a3b8' }}>
+            <div style={{ textAlign: 'center', padding: '60px 40px', background: 'var(--surface)', borderRadius: 8, color: 'var(--text-secondary)' }}>
               <p style={{ fontSize: 18, marginBottom: 10 }}>🗑️ Your trash is empty</p>
               <p>Deleted files and folders will appear here</p>
             </div>
           ) : (
-            <div style={{ background: '#1e293b', borderRadius: 8, overflow: 'hidden' }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 8, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #334155' }}>
-                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: '#cbd5e1', fontSize: 13 }}>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 13 }}>
                       <input
                         type="checkbox"
                         checked={selectedItems.size === trashItems.length && trashItems.length > 0}
@@ -350,16 +350,16 @@ export default function Trash() {
                         style={{ cursor: 'pointer', width: 16, height: 16 }}
                       />
                     </th>
-                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: '#cbd5e1', fontSize: 13 }}>Name</th>
-                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: '#cbd5e1', fontSize: 13 }}>Type</th>
-                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: '#cbd5e1', fontSize: 13 }}>Size</th>
-                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: '#cbd5e1', fontSize: 13 }}>Deleted</th>
-                    <th style={{ padding: '15px', textAlign: 'center', fontWeight: 600, color: '#cbd5e1', fontSize: 13 }}>Actions</th>
+                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 13 }}>Name</th>
+                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 13 }}>Type</th>
+                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 13 }}>Size</th>
+                    <th style={{ padding: '15px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 13 }}>Deleted</th>
+                    <th style={{ padding: '15px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 13 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {getSortedItems().map((item, idx) => (
-                    <tr key={item.id} style={{ borderBottom: '1px solid #334155', background: idx % 2 === 0 ? 'transparent' : '#0f172a' }}>
+                    <tr key={item.id} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 0 ? 'transparent' : 'var(--bg-page)' }}>
                       <td style={{ padding: '15px' }}>
                         <input
                           type="checkbox"
@@ -368,13 +368,13 @@ export default function Trash() {
                           style={{ cursor: 'pointer', width: 16, height: 16 }}
                         />
                       </td>
-                      <td style={{ padding: '15px', color: '#f1f5f9', fontSize: 13 }}>
+                      <td style={{ padding: '15px', color: 'var(--text-primary)', fontSize: 13 }}>
                         <span style={{ marginRight: '8px' }}>{item.type === 'file' ? '📄' : '📁'}</span>
                         {item.name}
                       </td>
-                      <td style={{ padding: '15px', color: '#cbd5e1', fontSize: 13, textTransform: 'capitalize' }}>{item.type}</td>
-                      <td style={{ padding: '15px', color: '#cbd5e1', fontSize: 13 }}>{formatSize(item.sizeBytes)}</td>
-                      <td style={{ padding: '15px', color: '#cbd5e1', fontSize: 13 }}>{formatDate(item.deletedAt)}</td>
+                      <td style={{ padding: '15px', color: 'var(--text-secondary)', fontSize: 13, textTransform: 'capitalize' }}>{item.type}</td>
+                      <td style={{ padding: '15px', color: 'var(--text-secondary)', fontSize: 13 }}>{formatSize(item.sizeBytes)}</td>
+                      <td style={{ padding: '15px', color: 'var(--text-secondary)', fontSize: 13 }}>{formatDate(item.deletedAt)}</td>
                       <td style={{ padding: '15px', textAlign: 'center' }}>
                         <button
                           onClick={() => handleRestore(item.id, item.type)}
@@ -383,8 +383,8 @@ export default function Trash() {
                             marginRight: '6px',
                             borderRadius: 4,
                             border: 'none',
-                            background: '#10b981',
-                            color: '#fff',
+                            background: 'var(--accent-teal)',
+                            color: 'var(--text-primary)',
                             cursor: 'pointer',
                             fontSize: 12,
                             fontWeight: 600,
@@ -398,8 +398,8 @@ export default function Trash() {
                             padding: '6px 12px',
                             borderRadius: 4,
                             border: 'none',
-                            background: '#ef4444',
-                            color: '#fff',
+                            background: 'var(--accent-coral)',
+                            color: 'var(--text-primary)',
                             cursor: 'pointer',
                             fontSize: 12,
                             fontWeight: 600,

@@ -18,15 +18,15 @@ export default function FolderTree({ currentFolderId, onSelect }: Props) {
 
   return (
     <div>
-      <div style={{ fontSize: 11, color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Navigation</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Navigation</div>
       {roots.map((f) => (
         <div
           key={f.id}
           onClick={() => onSelect(f.id)}
           style={{
             padding: '7px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 13,
-            background: currentFolderId === f.id ? '#6366f120' : 'transparent',
-            color: currentFolderId === f.id ? '#6366f1' : '#cbd5e1',
+            background: currentFolderId === f.id ? 'var(--accent-bg)' : 'transparent',
+            color: currentFolderId === f.id ? 'var(--accent-purple)' : 'var(--text-secondary)',
             fontWeight: currentFolderId === f.id ? 600 : 400,
           }}
         >

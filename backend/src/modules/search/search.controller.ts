@@ -59,7 +59,7 @@ export const searchFiles = async (req: AuthRequest, res: Response) => {
     };
   }
 
-  // 🏷️ Tag filter (removed mode)
+  // 🏷️ Tag filter
   if (tagList.length > 0) {
     baseFileWhere.tags = {
       some: {
@@ -128,6 +128,26 @@ export const searchFiles = async (req: AuthRequest, res: Response) => {
 
   if (useCurrentFolder && folderId) {
     folderWhere.parentFolderId = String(folderId);
+  }
+
+  const folderMatches: any[] = [];
+
+  if (q) {
+    folderMatches.push({
+      name: {
+        contains: String(q),
+      },
+    });
+  }
+
+  folderMatches.push({
+    files: {
+      some: baseFileWhere,
+    },
+  });
+
+  if (folderMatches.length > 0) {
+    folderWhere.OR = folderMatches;
   }
 
   const folders = await prisma.folder.findMany({

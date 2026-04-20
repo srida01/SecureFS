@@ -90,10 +90,10 @@ export default function FilePreviewModal({ file, onClose }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             <span style={{ fontSize: 20 }}>{mimeIcon(file.mimeType)}</span>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 15, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {file.name}
               </div>
-              <div style={{ fontSize: 12, color: '#475569' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 {file.mimeType} · {fmtBytes(Number(file.sizeBytes || 0))}
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function FilePreviewModal({ file, onClose }: Props) {
               <a
                 href={downloadUrl}
                 download={file.name}
-                style={{ padding: '6px 14px', background: '#0ea5e9', color: '#fff', borderRadius: 6, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}
+                style={{ padding: '6px 14px', background: 'var(--accent-teal)', color: 'var(--text-primary)', borderRadius: 6, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}
               >
                 ⬇ Download
               </a>
@@ -117,14 +117,14 @@ export default function FilePreviewModal({ file, onClose }: Props) {
           {loading && (
             <div style={centered}>
               <div style={spinnerStyle} />
-              <span style={{ color: '#64748b', fontSize: 14, marginTop: 12 }}>Loading preview...</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 12 }}>Loading preview...</span>
             </div>
           )}
 
           {error && (
             <div style={centered}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
-              <div style={{ color: '#ef4444', fontSize: 14 }}>{error}</div>
+              <div style={{ color: 'var(--accent-coral)', fontSize: 14 }}>{error}</div>
             </div>
           )}
 
@@ -147,17 +147,17 @@ export default function FilePreviewModal({ file, onClose }: Props) {
           {!loading && !error && previewType === 'pptx' && (
             <div style={centered}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>📄</div>
-              <div style={{ color: '#e2e8eb', fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+              <div style={{ color: 'var(--text-primary)', fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
                 PPTX preview is not available inline
               </div>
-              <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 20, maxWidth: 420, textAlign: 'center' }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 20, maxWidth: 420, textAlign: 'center' }}>
                 Browser preview for PowerPoint files is not supported. Use the download button to open it in a compatible application.
               </div>
               {downloadUrl && (
                 <a
                   href={downloadUrl}
                   download={file.name}
-                  style={{ padding: '10px 24px', background: '#6366f1', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
+                  style={{ padding: '10px 24px', background: 'var(--accent-purple)', color: 'var(--text-primary)', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
                 >
                   Download PPTX
                 </a>
@@ -167,7 +167,7 @@ export default function FilePreviewModal({ file, onClose }: Props) {
 
           {!loading && !error && previewType === 'text' && textContent !== null && (
             <pre style={{
-              margin: 0, padding: 20, color: '#cbd5e1', fontSize: 13,
+              margin: 0, padding: 20, color: 'var(--text-primary)', fontSize: 13,
               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
               overflow: 'auto', width: '100%', height: '100%',
               boxSizing: 'border-box', background: 'transparent',
@@ -186,7 +186,7 @@ export default function FilePreviewModal({ file, onClose }: Props) {
           {!loading && !error && previewType === 'audio' && url && (
             <div style={centered}>
               <div style={{ fontSize: 64, marginBottom: 24 }}>🎵</div>
-              <div style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: 16 }}>{file.name}</div>
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>{file.name}</div>
               <audio controls style={{ width: 300 }}>
                 <source src={url} type={file.mimeType} />
               </audio>
@@ -196,17 +196,17 @@ export default function FilePreviewModal({ file, onClose }: Props) {
           {!loading && !error && previewType === 'unsupported' && (
             <div style={centered}>
               <div style={{ fontSize: 64, marginBottom: 16 }}>📎</div>
-              <div style={{ color: '#94a3b8', fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
                 Preview not available
               </div>
-              <div style={{ color: '#475569', fontSize: 13, marginBottom: 20 }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
                 This file type cannot be previewed in the browser.
               </div>
               {downloadUrl && (
                 <a
                   href={downloadUrl}
                   download={file.name}
-                  style={{ padding: '10px 24px', background: '#6366f1', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
+                  style={{ padding: '10px 24px', background: 'var(--accent-purple)', color: 'var(--text-primary)', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
                 >
                   Download to view
                 </a>
@@ -235,30 +235,30 @@ const overlay: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 20,
 };
 const container: React.CSSProperties = {
-  background: '#0f172a', borderRadius: 14, width: '90vw', height: '85vh',
+  background: 'var(--bg-page)', borderRadius: 14, width: '90vw', height: '85vh',
   maxWidth: 1100, display: 'flex', flexDirection: 'column',
-  border: '1px solid #1e293b', overflow: 'hidden',
+  border: '1px solid var(--border)', overflow: 'hidden',
 };
 const header: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '14px 20px', borderBottom: '1px solid #1e293b', flexShrink: 0,
+  padding: '14px 20px', borderBottom: '1px solid var(--border)', flexShrink: 0,
 };
 const closeBtn: React.CSSProperties = {
-  background: '#1e293b', border: 'none', color: '#94a3b8',
+  background: 'var(--surface)', border: 'none', color: 'var(--text-secondary)',
   cursor: 'pointer', fontSize: 16, width: 32, height: 32,
   borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 const previewArea: React.CSSProperties = {
   flex: 1, overflow: 'hidden', display: 'flex',
   alignItems: 'center', justifyContent: 'center',
-  background: '#080f1a',
+  background: 'var(--bg-base)',
 };
 const centered: React.CSSProperties = {
   display: 'flex', flexDirection: 'column',
   alignItems: 'center', justifyContent: 'center',
 };
 const spinnerStyle: React.CSSProperties = {
-  width: 36, height: 36, border: '3px solid #1e293b',
-  borderTopColor: '#6366f1', borderRadius: '50%',
+  width: 36, height: 36, border: '3px solid var(--border)',
+  borderTopColor: 'var(--accent-purple)', borderRadius: '50%',
   animation: 'spin 0.8s linear infinite',
 };

@@ -141,9 +141,9 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
 
   if (folders.length === 0 && files.length === 0) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', color: '#475569' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh', color: 'var(--text-muted)' }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>☁️</div>
-        <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#64748b' }}>This folder is empty</div>
+        <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: 'var(--text-secondary)' }}>This folder is empty</div>
         <div style={{ fontSize: 14 }}>Upload files or folders, or create a folder to get started</div>
       </div>
     );
@@ -153,8 +153,8 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
     <div onClick={close}>
       {/* Batch selection bar */}
       {selectedItems.size > 0 && (
-        <div style={{ background: '#1e293b', padding: '12px 24px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>{selectedItems.size} selected</span>
+        <div style={{ background: 'var(--surface)', padding: '12px 24px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>{selectedItems.size} selected</span>
           <div style={{ display: 'flex', gap: 8 }}>
             {canDelete && (
               <button
@@ -164,21 +164,21 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
                   if (fileIds.length > 0 && onBatchDelete) onBatchDelete(fileIds, 'file');
                   if (folderIds.length > 0 && onBatchDelete) onBatchDelete(folderIds, 'folder');
                 }}
-                style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                style={{ padding: '6px 12px', background: 'var(--accent-coral)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
               >
                 🗑 Move to Trash
               </button>
             )}
             <button
               onClick={clearSelection}
-              style={{ padding: '6px 12px', background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+              style={{ padding: '6px 12px', background: 'var(--elevated)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
             >
               Clear
             </button>
           </div>
           <button
             onClick={selectAll}
-            style={{ padding: '6px 12px', background: '#334155', color: '#e2e8f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginLeft: 'auto' }}
+            style={{ padding: '6px 12px', background: 'var(--elevated)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginLeft: 'auto' }}
           >
             Select All
           </button>
@@ -194,7 +194,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
                 key={f.id}
                 onDoubleClick={() => onFolderClick(f.id)}
                 onContextMenu={(e) => handleRightClick(e, f, 'folder')}
-                style={{ ...card, border: selectedItems.has(f.id) ? '2px solid #6366f1' : card.border, background: selectedItems.has(f.id) ? '#1e293b' : card.background }}
+                style={{ ...card, border: selectedItems.has(f.id) ? '2px solid var(--accent-purple)' : card.border, background: selectedItems.has(f.id) ? 'var(--surface)' : card.background }}
               >
                 <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, cursor: 'pointer' }}>
                   <input
@@ -237,7 +237,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
                 key={f.id}
                 onDoubleClick={() => setPreviewFile(f)}
                 onContextMenu={(e) => handleRightClick(e, f, 'file')}
-                style={{ ...card, border: selectedItems.has(f.id) ? '2px solid #6366f1' : card.border, background: selectedItems.has(f.id) ? '#1e293b' : card.background }}
+                style={{ ...card, border: selectedItems.has(f.id) ? '2px solid var(--accent-purple)' : card.border, background: selectedItems.has(f.id) ? 'var(--surface)' : card.background }}
               >
                 <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, cursor: 'pointer' }}>
                   <input
@@ -276,7 +276,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
         <div
           style={{
             position: 'fixed', top: contextMenu.y, left: contextMenu.x,
-            background: '#1e293b', border: '1px solid #334155', borderRadius: 8,
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8,
             zIndex: 200, minWidth: 180, boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
             overflow: 'hidden',
           }}
@@ -314,11 +314,11 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
           <button onClick={() => { handleViewAuditLogs(contextMenu.item, contextMenu.type); }} style={menuBtn}>
             📋 Audit Logs
           </button>
-          <div style={{ height: 1, background: '#334155', margin: '4px 0' }} />
+          <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
           {canDelete && (
             <button
               onClick={() => { onDelete(contextMenu.type, contextMenu.item.id); close(); }}
-              style={{ ...menuBtn, color: '#ef4444' }}
+              style={{ ...menuBtn, color: 'var(--accent-coral)' }}
             >
               🗑 Move to Trash
             </button>
@@ -361,29 +361,29 @@ const grid: React.CSSProperties = {
   gap: 12,
 };
 const card: React.CSSProperties = {
-  background: '#1e293b', borderRadius: 10, padding: '16px 14px',
-  cursor: 'pointer', border: '1px solid #334155',
+  background: 'var(--surface)', borderRadius: 10, padding: '16px 14px',
+  cursor: 'pointer', border: '1px solid var(--border)',
   transition: 'border-color 0.15s',
 };
 const sectionLabel: React.CSSProperties = {
-  fontSize: 11, color: '#475569', fontWeight: 700,
+  fontSize: 11, color: 'var(--text-muted)', fontWeight: 700,
   textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12,
 };
 const cardName: React.CSSProperties = {
-  fontSize: 13, fontWeight: 600, color: '#e2e8f0',
+  fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 };
 const cardHint: React.CSSProperties = {
-  fontSize: 10, color: '#334155', marginTop: 4,
+  fontSize: 10, color: 'var(--text-muted)', marginTop: 4,
   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 };
 const renameInput: React.CSSProperties = {
-  width: '100%', padding: '4px 6px', background: '#0f172a',
-  border: '1px solid #6366f1', color: '#e2e8f0', borderRadius: 4,
+  width: '100%', padding: '4px 6px', background: 'var(--bg-base)',
+  border: '1px solid var(--accent-purple)', color: 'var(--text-primary)', borderRadius: 4,
   fontSize: 12, boxSizing: 'border-box',
 };
 const menuBtn: React.CSSProperties = {
   display: 'block', width: '100%', padding: '9px 16px',
-  background: 'none', border: 'none', color: '#e2e8f0',
+  background: 'none', border: 'none', color: 'var(--text-primary)',
   cursor: 'pointer', textAlign: 'left', fontSize: 13,
 };

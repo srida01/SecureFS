@@ -17,12 +17,12 @@ export default function StorageWidget({ quota }: Props) {
   };
 
   return (
-    <div style={{ background: '#0f172a', borderRadius: 10, padding: 14 }}>
-      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>Storage</div>
-      <div style={{ background: '#1e293b', borderRadius: 4, height: 8, marginBottom: 8 }}>
-        <div style={{ width: `${pct}%`, background: pct > 80 ? '#ef4444' : '#6366f1', height: 8, borderRadius: 4, transition: 'width 0.3s' }} />
+    <div style={{ background: 'var(--bg-page)', borderRadius: 10, padding: 14 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>Storage</div>
+      <div style={{ background: 'var(--surface)', borderRadius: 4, height: 8, marginBottom: 8 }}>
+        <div style={{ width: `${pct}%`, background: pct > 80 ? 'var(--accent-coral)' : 'var(--accent-purple)', height: 8, borderRadius: 4, transition: 'width 0.3s' }} />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)' }}>
         <span>{fmt(used)} used</span>
         <span>{fmt(total)} total</span>
       </div>

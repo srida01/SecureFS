@@ -95,9 +95,9 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
     >
       <div
         style={{
-          background: '#0f172a',
+          background: 'var(--bg-base)',
           borderRadius: 12,
-          border: '1px solid #334155',
+          border: '1px solid var(--border)',
           maxWidth: 500,
           width: '90%',
           maxHeight: '80vh',
@@ -112,13 +112,13 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
         <div
           style={{
             padding: 20,
-            borderBottom: '1px solid #334155',
+            borderBottom: '1px solid var(--border)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
-          <h2 style={{ margin: 0, color: '#e2e8f0', fontSize: 18, fontWeight: 600 }}>
+          <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: 18, fontWeight: 600 }}>
             🏷️ Manage Tags: {fileName}
           </h2>
           <button
@@ -126,7 +126,7 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
             style={{
               background: 'none',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: 24,
             }}
@@ -148,8 +148,8 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
         >
           {/* Add Tag Form */}
           <form onSubmit={handleAddTag}>
-            <div style={{ background: '#1e293b', padding: 16, borderRadius: 8, border: '1px solid #334155' }}>
-              <h3 style={{ margin: '0 0 12px 0', color: '#cbd5e1', fontSize: 14, fontWeight: 600 }}>
+            <div style={{ background: 'var(--surface)', padding: 16, borderRadius: 8, border: '1px solid var(--border)' }}>
+              <h3 style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600 }}>
                 Add New Tag
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -160,10 +160,10 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                   onChange={(e) => setNewTagName(e.target.value)}
                   style={{
                     padding: '8px 12px',
-                    background: '#0f172a',
-                    border: '1px solid #334155',
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
-                    color: '#e2e8f0',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                   }}
                 />
@@ -174,10 +174,10 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                   onChange={(e) => setNewTagKey(e.target.value)}
                   style={{
                     padding: '8px 12px',
-                    background: '#0f172a',
-                    border: '1px solid #334155',
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
-                    color: '#e2e8f0',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                   }}
                 />
@@ -188,10 +188,10 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                   onChange={(e) => setNewTagValue(e.target.value)}
                   style={{
                     padding: '8px 12px',
-                    background: '#0f172a',
-                    border: '1px solid #334155',
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
                     borderRadius: 6,
-                    color: '#e2e8f0',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                   }}
                 />
@@ -199,8 +199,8 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                   type="submit"
                   style={{
                     padding: '8px 16px',
-                    background: '#6366f1',
-                    color: '#fff',
+                    background: 'var(--accent-purple)',
+                    color: 'var(--text-primary)',
                     border: 'none',
                     borderRadius: 6,
                     cursor: 'pointer',
@@ -209,10 +209,10 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                     transition: 'all 0.2s',
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.background = '#4f46e5';
+                    e.currentTarget.style.background = 'var(--accent-purple)';
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.background = '#6366f1';
+                    e.currentTarget.style.background = 'var(--accent-purple)';
                   }}
                 >
                   + Add Tag
@@ -223,15 +223,15 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
 
           {/* Tags List */}
           <div>
-            <h3 style={{ margin: '0 0 12px 0', color: '#cbd5e1', fontSize: 14, fontWeight: 600 }}>
+            <h3 style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600 }}>
               Current Tags ({tags.length})
             </h3>
             {loading ? (
-              <div style={{ color: '#94a3b8', textAlign: 'center', padding: 20 }}>
+              <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 20 }}>
                 ⏳ Loading tags...
               </div>
             ) : tags.length === 0 ? (
-              <div style={{ color: '#64748b', textAlign: 'center', padding: 20 }}>
+              <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 20 }}>
                 No tags yet. Add one above!
               </div>
             ) : (
@@ -240,8 +240,8 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                   <div
                     key={tag.id}
                     style={{
-                      background: '#1e293b',
-                      border: '1px solid #334155',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
                       borderRadius: 8,
                       padding: 12,
                       display: 'flex',
@@ -265,10 +265,10 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                           }}
                           style={{
                             padding: '6px 10px',
-                            background: '#0f172a',
-                            border: '1px solid #6366f1',
+                            background: 'var(--bg-base)',
+                            border: '1px solid var(--accent-purple)',
                             borderRadius: 4,
-                            color: '#e2e8f0',
+                            color: 'var(--text-primary)',
                             width: '100%',
                             fontSize: 13,
                           }}
@@ -279,7 +279,7 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                             onClick={() => setEditingId(tag.id)}
                             style={{
                               fontSize: 13,
-                              color: '#e2e8f0',
+                              color: 'var(--text-primary)',
                               fontWeight: 500,
                               cursor: 'pointer',
                               padding: '4px 0',
@@ -288,12 +288,12 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                             {tag.name}
                           </div>
                           {tag.key && (
-                            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                               Key: {tag.key}
                             </div>
                           )}
                           {tag.value && (
-                            <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                               Value: {tag.value}
                             </div>
                           )}
@@ -305,7 +305,7 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#ef4444',
+                        color: 'var(--accent-coral)',
                         cursor: 'pointer',
                         fontSize: 18,
                         padding: '0 8px',
@@ -324,7 +324,7 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
         <div
           style={{
             padding: 16,
-            borderTop: '1px solid #334155',
+            borderTop: '1px solid var(--border)',
             textAlign: 'right',
           }}
         >
@@ -332,20 +332,20 @@ export default function TagManager({ fileId, fileName, onClose }: Props) {
             onClick={onClose}
             style={{
               padding: '8px 16px',
-              background: '#334155',
+              background: 'var(--elevated)',
               border: 'none',
               borderRadius: 6,
-              color: '#e2e8f0',
+              color: 'var(--text-primary)',
               cursor: 'pointer',
               fontSize: 14,
               fontWeight: 500,
               transition: 'all 0.2s',
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = '#475569';
+              e.currentTarget.style.background = 'var(--elevated)';
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.background = '#334155';
+              e.currentTarget.style.background = 'var(--elevated)';
             }}
           >
             Close

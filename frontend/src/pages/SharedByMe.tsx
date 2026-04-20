@@ -68,25 +68,25 @@ export default function SharedByMe() {
 
   const levelBadge = (level: string) => {
     const map: Record<string, { bg: string; color: string }> = {
-      view: { bg: '#0ea5e920', color: '#38bdf8' },
-      edit: { bg: '#22c55e20', color: '#4ade80' },
-      delete: { bg: '#ef444420', color: '#f87171' },
-      owner: { bg: '#f59e0b20', color: '#fbbf24' },
+      view: { bg: 'var(--accent-teal-bg)', color: 'var(--accent-teal)' },
+      edit: { bg: 'var(--accent-purple-bg)', color: 'var(--accent-purple)' },
+      delete: { bg: 'var(--accent-coral-bg)', color: 'var(--accent-coral)' },
+      owner: { bg: 'var(--accent-amber-bg)', color: 'var(--accent-amber)' },
     };
-    return map[level] || { bg: '#33415520', color: '#94a3b8' };
+    return map[level] || { bg: 'var(--border)', color: 'var(--text-secondary)' };
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#e2e8f0', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text-primary)', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
         <button
           onClick={() => navigate('/')}
-          style={{ background: 'none', border: '1px solid #334155', color: '#94a3b8', padding: '6px 14px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
+          style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', padding: '6px 14px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
         >
           ← Dashboard
         </button>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Shared by You</h1>
-        <div style={{ marginLeft: 'auto', fontSize: 13, color: '#475569' }}>
+        <div style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--text-secondary)' }}>
           {sharedItems.length} active share{sharedItems.length !== 1 ? 's' : ''}
         </div>
       </div>
@@ -100,8 +100,8 @@ export default function SharedByMe() {
               style={{
                 padding: '6px 16px', border: 'none', borderRadius: 6, cursor: 'pointer',
                 fontWeight: 600, fontSize: 13, textTransform: 'capitalize',
-                background: filter === f ? '#6366f1' : '#1e293b',
-                color: filter === f ? '#fff' : '#64748b',
+                background: filter === f ? 'var(--accent-purple)' : 'var(--surface)',
+                color: filter === f ? 'var(--text-primary)' : 'var(--text-muted)',
               }}
             >
               {f === 'all' ? 'All' : f === 'file' ? '📄 Files' : '📁 Folders'}
@@ -111,19 +111,19 @@ export default function SharedByMe() {
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <div style={{ width: 36, height: 36, border: '3px solid #1e293b', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: 36, height: 36, border: '3px solid var(--surface)', borderTopColor: 'var(--accent-purple)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div style={{ textAlign: 'center', paddingTop: 80, color: '#475569' }}>
+          <div style={{ textAlign: 'center', paddingTop: 80, color: 'var(--text-secondary)' }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>🔐</div>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#64748b' }}>No active shares found</div>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>No active shares found</div>
             <div style={{ fontSize: 14 }}>Share files or folders to manage permissions from here.</div>
           </div>
         ) : (
-          <div style={{ background: '#1e293b', borderRadius: 12, border: '1px solid #334155', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#0f172a', color: '#475569' }}>
+                <tr style={{ background: 'var(--bg-page)', color: 'var(--text-secondary)' }}>
                   {['Name', 'Type', 'Shared To', 'Permission', 'Shared On', 'Actions'].map((h) => (
                     <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {h}
@@ -136,19 +136,19 @@ export default function SharedByMe() {
                   const resource = item.file || item.folder;
                   const badge = levelBadge(item.permissionLevel);
                   return (
-                    <tr key={item.id} style={{ borderBottom: '1px solid #0f172a' }}>
+                    <tr key={item.id} style={{ borderBottom: '1px solid var(--bg-page)' }}>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <span style={{ fontSize: 20 }}>
                             {item.resourceType === 'file' ? getIcon(resource?.mimeType) : '📁'}
                           </span>
-                          <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{resource?.name || 'Unknown'}</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{resource?.name || 'Unknown'}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#64748b', textTransform: 'capitalize' }}>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                         {item.resourceType}
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#94a3b8', fontFamily: 'monospace', fontSize: 11 }}>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: 11 }}>
                         {item.grantee?.clerkUserId?.slice(0, 16)}…
                       </td>
                       <td style={{ padding: '12px 16px' }}>
@@ -159,7 +159,7 @@ export default function SharedByMe() {
                           <select
                             value={item.permissionLevel}
                             onChange={(e) => handleUpdatePermission(item, e.target.value)}
-                            style={{ padding: '6px 10px', background: '#0f172a', border: '1px solid #334155', color: '#e2e8f0', borderRadius: 6, fontSize: 12, minWidth: 110 }}
+                            style={{ padding: '6px 10px', background: 'var(--bg-page)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: 6, fontSize: 12, minWidth: 110 }}
                           >
                             <option value="view">View only</option>
                             <option value="edit">Edit</option>
@@ -167,7 +167,7 @@ export default function SharedByMe() {
                           </select>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#475569' }}>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>
                         {new Date(item.createdAt).toLocaleDateString()}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
@@ -202,5 +202,5 @@ function getIcon(mime: string) {
 }
 
 const actionBtn: React.CSSProperties = {
-  padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+  padding: '6px 12px', background: 'var(--accent-coral)', color: 'var(--text-primary)', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700,
 };
