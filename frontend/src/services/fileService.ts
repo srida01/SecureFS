@@ -124,3 +124,24 @@ export const folderService = {
     return res.data.data;
   },
 };
+
+export const tagService = {
+  async addTag(fileId: string, name: string, key?: string, value?: string) {
+    const res = await api.post(`/tags/files/${fileId}/tags`, { name, key, value });
+    return res.data.data;
+  },
+
+  async getFileTags(fileId: string) {
+    const res = await api.get(`/tags/files/${fileId}/tags`);
+    return res.data.data;
+  },
+
+  async updateTag(fileId: string, tagId: string, name?: string, key?: string, value?: string) {
+    const res = await api.patch(`/tags/files/${fileId}/tags/${tagId}`, { name, key, value });
+    return res.data.data;
+  },
+
+  async removeTag(fileId: string, tagId: string) {
+    await api.delete(`/tags/files/${fileId}/tags/${tagId}`);
+  },
+};

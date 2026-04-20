@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import FilePreviewModal from './FilePreviewModal.tsx';
 import VersionHistoryModal from './VersionHistoryModal';
 import AuditLogsModal from './AuditLogsModal';
+import TagManager from './TagManager';
 import { fileService, folderService } from '../services/fileService';
 
 
@@ -69,6 +70,7 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
   resourceName: '',
   isLoading: false,
 });
+  const [tagManagerModal, setTagManagerModal] = useState<{ isOpen: boolean; fileId: string; fileName: string } | null>(null);
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedItems);
     if (newSelected.has(id)) {
@@ -291,6 +293,9 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
               <button onClick={() => { setVersionFile(contextMenu.item); close(); }} style={menuBtn}>
                 🕐 Version History
               </button>
+              <button onClick={() => { setTagManagerModal({ isOpen: true, fileId: contextMenu.item.id, fileName: contextMenu.item.name }); close(); }} style={menuBtn}>
+                🏷️ Manage Tags
+              </button>
             </>
           )}
           {contextMenu.type === 'folder' && (
@@ -336,6 +341,15 @@ export default function FileGrid({ folders, files, onFolderClick, onDelete, onBa
   resourceName={auditLogsModal.resourceName}
   isLoading={auditLogsModal.isLoading}
   />
+
+      {/* Tag Manager Modal */}
+      {tagManagerModal && (
+        <TagManager
+          fileId={tagManagerModal.fileId}
+          fileName={tagManagerModal.fileName}
+          onClose={() => setTagManagerModal(null)}
+        />
+      )}
     </div>
   );
 

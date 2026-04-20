@@ -15,6 +15,7 @@ import { adminRouter } from './modules/admin/admin.router';
 import { auditRouter } from './modules/audit-logs/audit.router';
 import { shareLinkRouter } from './modules/share-links/shareLink.router';
 import { trashRouter } from './modules/trash/trash.router';
+import { tagRouter } from './modules/tags/tag.router';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 import { validateEnvironment } from './utils/validateEnv';
@@ -61,6 +62,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/audit-logs', auditRouter);
 app.use('/api/share-links', shareLinkRouter);
 app.use('/api/trash', trashRouter);
+app.use('/api/tags', tagRouter);
 app.use('/api/admin', adminRouter);
 
 // Health check
