@@ -366,7 +366,7 @@ export default function Dashboard() {
               </label>
               <label style={{ ...headerBtn('#8b5cf6', '#fff'), cursor: 'pointer' }}>
                 📁 Upload Folder
-                <input type="file" multiple webkitdirectory="" style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
+                <input type="file" multiple {...({ webkitdirectory: '' } as any)} style={{ display: 'none' }} onChange={(e) => e.target.files && onDrop(Array.from(e.target.files))} />
               </label>
             </>
           )}

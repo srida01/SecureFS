@@ -17,6 +17,7 @@ exports.fileRouter.get('/trash', file_controller_1.getDeletedFiles);
 exports.fileRouter.get('/', file_controller_1.getFiles);
 exports.fileRouter.get('/:id', file_controller_1.getFileById);
 exports.fileRouter.get('/:id/download', file_controller_1.downloadFile);
+exports.fileRouter.get('/:id/preview', file_controller_1.previewFile);
 exports.fileRouter.get('/:id/versions', file_controller_1.getFileVersions);
 exports.fileRouter.get('/:id/versions/:versionId/download', file_controller_1.downloadFileVersion);
 exports.fileRouter.post('/:id/versions/:versionId/restore', file_controller_1.restoreFileVersion);

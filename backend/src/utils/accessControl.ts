@@ -31,7 +31,7 @@ export const getEffectivePermission = async (
   userId: string,
   resourceId: string,
   resourceType: ResourceType
-) => {
+): Promise<any> => {
   const direct = await prisma.permission.findFirst({
     where: {
       granteeUserId: userId,
@@ -107,5 +107,5 @@ export const hasPermission = async (
 
   const perm = await getEffectivePermission(userId, resourceId, resourceType);
   if (!perm) return false;
-  return permissionPriority[perm.permissionLevel] >= permissionPriority[requiredLevel];
+  return permissionPriority[perm.permissionLevel as PermissionLevel] >= permissionPriority[requiredLevel];
 };

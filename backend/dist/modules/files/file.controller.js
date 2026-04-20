@@ -1,12 +1,16 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFileAuditLogs = exports.downloadFileVersion = exports.restoreFileVersion = exports.getFileVersions = exports.batchDeleteFiles = exports.getDeletedFiles = exports.deleteFile = exports.restoreFile = exports.renameFile = exports.downloadFile = exports.getFileById = exports.getFiles = exports.uploadFile = void 0;
+exports.getFileAuditLogs = exports.downloadFileVersion = exports.restoreFileVersion = exports.getFileVersions = exports.batchDeleteFiles = exports.getDeletedFiles = exports.deleteFile = exports.restoreFile = exports.renameFile = exports.previewFile = exports.downloadFile = exports.getFileById = exports.getFiles = exports.uploadFile = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const prisma_1 = require("../../utils/prisma");
 const errorHandler_1 = require("../../middleware/errorHandler");
 const auditLogger_1 = require("../../middleware/auditLogger");
 const storage_service_1 = require("../../services/storage.service");
 const accessControl_1 = require("../../utils/accessControl");
-const trash_service_1 = require("../trash/trash.service");
 const uploadFile = async (req, res) => {
     if (!req.file)
         throw new errorHandler_1.AppError(400, 'No file provided');
@@ -123,6 +127,47 @@ const downloadFile = async (req, res) => {
     res.json({ success: true, data: { url, name: file.name, mimeType: file.mimeType } });
 };
 exports.downloadFile = downloadFile;
+const previewFile = async (req, res) => {
+    const file = await prisma_1.prisma.file.findUnique({ where: { id: req.params.id } });
+    if (!file || file.isDeleted)
+        throw new errorHandler_1.AppError(404, 'File not found');
+    if (file.ownerId !== req.userId) {
+        const canView = await (0, accessControl_1.hasPermission)(req.userId, file.id, 'file', 'view');
+        if (!canView)
+            throw new errorHandler_1.AppError(403, 'Access denied');
+    }
+    if (process.env.USE_LOCAL_STORAGE === 'true') {
+        const filePath = path_1.default.join(process.cwd(), '../uploads', file.storageKey);
+        if (!fs_1.default.existsSync(filePath))
+            throw new errorHandler_1.AppError(404, 'File not found on disk');
+        // Set appropriate headers for preview
+        res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+        res.setHeader('Content-Disposition', 'inline'); // Important for preview
+        res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
+        // For security, only allow certain file types to be previewed inline
+        const allowedPreviewTypes = [
+            'image/',
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+            'text/',
+            'video/',
+            'audio/',
+            'application/json'
+        ];
+        const canPreview = allowedPreviewTypes.some(type => file.mimeType?.startsWith(type));
+        if (!canPreview) {
+            res.setHeader('Content-Disposition', 'attachment; filename="' + encodeURIComponent(file.name) + '"');
+        }
+        const fileStream = fs_1.default.createReadStream(filePath);
+        fileStream.pipe(res);
+    }
+    else {
+        // For S3 or other storage, redirect to the file URL
+        const url = storage_service_1.storageService.getFileUrl(file.storageKey);
+        res.redirect(url);
+    }
+};
+exports.previewFile = previewFile;
 const renameFile = async (req, res) => {
     const { name, folderId } = req.body;
     const file = await prisma_1.prisma.file.findUnique({ where: { id: req.params.id } });
@@ -154,12 +199,18 @@ const renameFile = async (req, res) => {
 };
 exports.renameFile = renameFile;
 const restoreFile = async (req, res) => {
-    const file = await trash_service_1.trashService.restoreFile(req.params.id, req.userId);
-    await (0, auditLogger_1.createAuditLog)(req.userId, 'restore', file.id, 'file', {
-        action: 'restore',
-        name: file.name,
+    const file = await prisma_1.prisma.file.findUnique({ where: { id: req.params.id } });
+    if (!file || file.ownerId !== req.userId)
+        throw new errorHandler_1.AppError(403, 'Access denied');
+    if (!file.isDeleted)
+        throw new errorHandler_1.AppError(400, 'File is not deleted');
+    await prisma_1.prisma.file.update({ where: { id: req.params.id }, data: { isDeleted: false } });
+    await prisma_1.prisma.storageQuota.update({
+        where: { userId: req.userId },
+        data: { usedBytes: { increment: file.sizeBytes } },
     });
-    res.json({ success: true, message: 'File restored', data: file });
+    await (0, auditLogger_1.createAuditLog)(req.userId, 'edit', file.id, 'file', { action: 'restore', name: file.name });
+    res.json({ success: true, message: 'File restored' });
 };
 exports.restoreFile = restoreFile;
 const deleteFile = async (req, res) => {
@@ -171,12 +222,13 @@ const deleteFile = async (req, res) => {
         if (!canDelete)
             throw new errorHandler_1.AppError(403, 'Access denied');
     }
-    const deleted = await trash_service_1.trashService.softDeleteFile(req.params.id, req.userId);
-    await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', file.id, 'file', {
-        action: 'soft_delete',
-        name: file.name,
+    await prisma_1.prisma.file.update({ where: { id: req.params.id }, data: { isDeleted: true } });
+    await prisma_1.prisma.storageQuota.update({
+        where: { userId: req.userId },
+        data: { usedBytes: { decrement: file.sizeBytes } },
     });
-    res.json({ success: true, message: 'File moved to trash', data: deleted });
+    await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', file.id, 'file', { name: file.name });
+    res.json({ success: true, message: 'File deleted' });
 };
 exports.deleteFile = deleteFile;
 const getDeletedFiles = async (req, res) => {
@@ -201,14 +253,10 @@ const batchDeleteFiles = async (req, res) => {
     if (files.length !== ids.length)
         throw new errorHandler_1.AppError(403, 'Access denied to some files');
     const totalSize = files.reduce((sum, f) => sum + f.sizeBytes, BigInt(0));
-    // Mark all as deleted with soft delete
+    // Mark all as deleted
     await prisma_1.prisma.file.updateMany({
         where: { id: { in: ids } },
-        data: {
-            isDeleted: true,
-            deletedAt: new Date(),
-            deletedBy: req.userId,
-        },
+        data: { isDeleted: true },
     });
     // Update quota
     await prisma_1.prisma.storageQuota.update({
@@ -216,14 +264,8 @@ const batchDeleteFiles = async (req, res) => {
         data: { usedBytes: { decrement: totalSize } },
     });
     // Audit log
-    await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', '', 'file', {
-        action: 'batch_soft_delete',
-        count: ids.length,
-    });
-    res.json({
-        success: true,
-        message: `${ids.length} files moved to trash`,
-    });
+    await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', '', 'file', { count: ids.length });
+    res.json({ success: true, message: `${ids.length} files deleted` });
 };
 exports.batchDeleteFiles = batchDeleteFiles;
 const getFileVersions = async (req, res) => {

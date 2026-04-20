@@ -11,7 +11,6 @@ const prisma_1 = require("../../utils/prisma");
 const errorHandler_1 = require("../../middleware/errorHandler");
 const auditLogger_1 = require("../../middleware/auditLogger");
 const accessControl_1 = require("../../utils/accessControl");
-const trash_service_1 = require("../trash/trash.service");
 const createFolder = async (req, res) => {
     const { name, parentFolderId } = req.body;
     if (!name)
@@ -176,21 +175,74 @@ const deleteFolder = async (req, res) => {
         if (!canDelete)
             throw new errorHandler_1.AppError(403, 'Access denied');
     }
-    const deleted = await trash_service_1.trashService.softDeleteFolder(folder.id, req.userId);
-    await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', folder.id, 'folder', {
-        action: 'soft_delete',
-        name: folder.name,
+    const descendantIds = await getDescendantFolderIds(folder);
+    const allFolderIds = [folder.id, ...descendantIds];
+    const filesToDelete = await prisma_1.prisma.file.findMany({
+        where: {
+            folderId: { in: allFolderIds },
+            ownerId: req.userId,
+            isDeleted: false,
+        },
+        select: { id: true, name: true, sizeBytes: true },
     });
-    res.json({ success: true, message: 'Folder moved to trash', data: deleted });
+    const totalSize = filesToDelete.reduce((sum, f) => sum + f.sizeBytes, BigInt(0));
+    await prisma_1.prisma.folder.updateMany({
+        where: { id: { in: allFolderIds } },
+        data: { isDeleted: true },
+    });
+    await prisma_1.prisma.file.updateMany({
+        where: { folderId: { in: allFolderIds }, ownerId: req.userId },
+        data: { isDeleted: true },
+    });
+    await prisma_1.prisma.storageQuota.update({
+        where: { userId: req.userId },
+        data: { usedBytes: { decrement: totalSize } },
+    });
+    const deletedFilesList = filesToDelete.map(f => ({
+        id: f.id,
+        name: f.name,
+    }));
+    await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', folder.id, 'folder', {
+        name: folder.name,
+        deletedFilesCount: filesToDelete.length,
+        deletedFolderCount: allFolderIds.length,
+        deletedFiles: deletedFilesList,
+        totalDeletedSize: totalSize.toString(),
+    });
+    res.json({ success: true, message: 'Folder deleted with contents moved to trash' });
 };
 exports.deleteFolder = deleteFolder;
 const restoreFolder = async (req, res) => {
-    const restored = await trash_service_1.trashService.restoreFolder(req.params.id, req.userId);
-    await (0, auditLogger_1.createAuditLog)(req.userId, 'restore', req.params.id, 'folder', {
-        action: 'restore',
-        name: restored.name,
+    const folder = await prisma_1.prisma.folder.findUnique({ where: { id: req.params.id } });
+    if (!folder || folder.ownerId !== req.userId)
+        throw new errorHandler_1.AppError(403, 'Access denied');
+    if (!folder.isDeleted)
+        throw new errorHandler_1.AppError(400, 'Folder is not deleted');
+    const descendantIds = await getDescendantFolderIds(folder);
+    const allFolderIds = [folder.id, ...descendantIds];
+    const filesToRestore = await prisma_1.prisma.file.findMany({
+        where: {
+            folderId: { in: allFolderIds },
+            ownerId: req.userId,
+            isDeleted: true,
+        },
+        select: { id: true, sizeBytes: true },
     });
-    res.json({ success: true, message: 'Folder restored', data: restored });
+    const totalSize = filesToRestore.reduce((sum, f) => sum + f.sizeBytes, BigInt(0));
+    await prisma_1.prisma.folder.updateMany({
+        where: { id: { in: allFolderIds } },
+        data: { isDeleted: false },
+    });
+    await prisma_1.prisma.file.updateMany({
+        where: { folderId: { in: allFolderIds }, ownerId: req.userId },
+        data: { isDeleted: false },
+    });
+    await prisma_1.prisma.storageQuota.update({
+        where: { userId: req.userId },
+        data: { usedBytes: { increment: totalSize } },
+    });
+    await (0, auditLogger_1.createAuditLog)(req.userId, 'edit', folder.id, 'folder', { action: 'restore', name: folder.name });
+    res.json({ success: true, message: 'Folder restored' });
 };
 exports.restoreFolder = restoreFolder;
 const downloadFolder = async (req, res) => {
@@ -249,25 +301,16 @@ const batchDeleteFolders = async (req, res) => {
     });
     if (folders.length !== ids.length)
         throw new errorHandler_1.AppError(403, 'Access denied to some folders');
-    // Soft delete all folders with timestamps
     await prisma_1.prisma.folder.updateMany({
         where: { id: { in: ids } },
-        data: {
-            isDeleted: true,
-            deletedAt: new Date(),
-            deletedBy: req.userId,
-        },
+        data: { isDeleted: true },
     });
-    const folderDetails = folders.map((f) => ({ id: f.id, name: f.name }));
+    const folderDetails = folders.map(f => ({ id: f.id, name: f.name }));
     await (0, auditLogger_1.createAuditLog)(req.userId, 'delete', '', 'folder', {
-        action: 'batch_soft_delete',
         count: ids.length,
-        folders: folderDetails,
+        folders: folderDetails
     });
-    res.json({
-        success: true,
-        message: `${ids.length} folders moved to trash`,
-    });
+    res.json({ success: true, message: `${ids.length} folders deleted` });
 };
 exports.batchDeleteFolders = batchDeleteFolders;
 const getFolderAuditLogs = async (req, res) => {

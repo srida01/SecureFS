@@ -7,12 +7,13 @@ interface Props {
   onClose: () => void;
 }
 
-type PreviewType = 'image' | 'pdf' | 'text' | 'video' | 'audio' | 'unsupported';
+type PreviewType = 'image' | 'pdf' | 'pptx' | 'text' | 'video' | 'audio' | 'unsupported';
 
 function getPreviewType(mimeType: string): PreviewType {
   if (!mimeType) return 'unsupported';
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType === 'application/pdf') return 'pdf';
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') return 'pptx';
   if (mimeType.startsWith('text/') || mimeType === 'application/json') return 'text';
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
@@ -22,6 +23,7 @@ function getPreviewType(mimeType: string): PreviewType {
 export default function FilePreviewModal({ file, onClose }: Props) {
   const { getToken } = useAuth();
   const [url, setUrl] = useState<string | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,26 +32,45 @@ export default function FilePreviewModal({ file, onClose }: Props) {
 
   useEffect(() => {
     loadPreview();
+  }, [file.id, previewType]);
+
+  useEffect(() => {
     return () => {
       if (url) URL.revokeObjectURL(url);
     };
-  }, []);
+  }, [url]);
 
   const loadPreview = async () => {
     setLoading(true);
     setError(null);
+    setTextContent(null);
+    if (url) {
+      URL.revokeObjectURL(url);
+      setUrl(null);
+    }
+
     try {
-    
-      const { url: downloadUrl } = await fileService.downloadFile(file.id);
+      // Always get the download URL for the download button and preview source
+      const downloadData = await fileService.downloadFile(file.id);
+      const fileUrl = downloadData.url;
+      setDownloadUrl(fileUrl);
 
       if (previewType === 'text') {
-        const res = await fetch(downloadUrl);
+        // For text files, fetch content from the download URL
+        const res = await fetch(fileUrl);
         const text = await res.text();
         setTextContent(text.slice(0, 50000)); // cap at 50k chars
+      } else if (previewType === 'pptx') {
+        // PPTX preview is not supported inline in this browser.
+        setError('PPTX preview is not available. Please download the file to view it.');
       } else {
-        setUrl(downloadUrl);
+        const res = await fetch(fileUrl);
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
       }
-    } catch {
+    } catch (err) {
+      console.error('Preview error:', err);
       setError('Failed to load preview');
     } finally {
       setLoading(false);
@@ -78,9 +99,9 @@ export default function FilePreviewModal({ file, onClose }: Props) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            {url && (
+            {downloadUrl && (
               <a
-                href={url}
+                href={downloadUrl}
                 download={file.name}
                 style={{ padding: '6px 14px', background: '#0ea5e9', color: '#fff', borderRadius: 6, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}
               >
@@ -123,6 +144,27 @@ export default function FilePreviewModal({ file, onClose }: Props) {
             />
           )}
 
+          {!loading && !error && previewType === 'pptx' && (
+            <div style={centered}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>📄</div>
+              <div style={{ color: '#e2e8eb', fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                PPTX preview is not available inline
+              </div>
+              <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 20, maxWidth: 420, textAlign: 'center' }}>
+                Browser preview for PowerPoint files is not supported. Use the download button to open it in a compatible application.
+              </div>
+              {downloadUrl && (
+                <a
+                  href={downloadUrl}
+                  download={file.name}
+                  style={{ padding: '10px 24px', background: '#6366f1', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
+                >
+                  Download PPTX
+                </a>
+              )}
+            </div>
+          )}
+
           {!loading && !error && previewType === 'text' && textContent !== null && (
             <pre style={{
               margin: 0, padding: 20, color: '#cbd5e1', fontSize: 13,
@@ -160,9 +202,9 @@ export default function FilePreviewModal({ file, onClose }: Props) {
               <div style={{ color: '#475569', fontSize: 13, marginBottom: 20 }}>
                 This file type cannot be previewed in the browser.
               </div>
-              {url && (
+              {downloadUrl && (
                 <a
-                  href={url}
+                  href={downloadUrl}
                   download={file.name}
                   style={{ padding: '10px 24px', background: '#6366f1', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
                 >
@@ -183,6 +225,7 @@ function mimeIcon(mime: string) {
   if (mime.startsWith('video/')) return '🎬';
   if (mime.startsWith('audio/')) return '🎵';
   if (mime === 'application/pdf') return '📕';
+  if (mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') return '📊';
   if (mime.startsWith('text/')) return '📝';
   return '📎';
 }

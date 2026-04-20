@@ -5,6 +5,7 @@ import {
   uploadFile,
   getFiles,
   downloadFile,
+  previewFile,
   deleteFile,
   renameFile,
   getFileById,
@@ -28,6 +29,7 @@ fileRouter.get('/trash', getDeletedFiles);
 fileRouter.get('/', getFiles);
 fileRouter.get('/:id', getFileById);
 fileRouter.get('/:id/download', downloadFile);
+fileRouter.get('/:id/preview', previewFile);
 fileRouter.get('/:id/versions', getFileVersions);
 fileRouter.get('/:id/versions/:versionId/download', downloadFileVersion);
 fileRouter.post('/:id/versions/:versionId/restore', restoreFileVersion);

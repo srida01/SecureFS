@@ -35,6 +35,13 @@ export const fileService = {
     return res.data.data;
   },
 
+  async previewFile(id: string) {
+    const res = await api.get(`/files/${id}/preview`, {
+      responseType: 'blob', // Important for binary data
+    });
+    return res.data; // This will be a Blob
+  },
+
   async searchFiles(query: string) {
     const res = await api.get('/search', {
       params: { q: query },

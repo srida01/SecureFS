@@ -1,4 +1,6 @@
 import { Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { AuthRequest } from '../../middleware/authenticate';
 import { prisma } from '../../utils/prisma';
 import { AppError } from '../../middleware/errorHandler';
@@ -131,6 +133,49 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
   const url = storageService.getFileUrl(file.storageKey);
   await createAuditLog(req.userId!, 'download', file.id, 'file', { name: file.name });
   res.json({ success: true, data: { url, name: file.name, mimeType: file.mimeType } });
+};
+
+export const previewFile = async (req: AuthRequest, res: Response) => {
+  const file = await prisma.file.findUnique({ where: { id: req.params.id } });
+  if (!file || file.isDeleted) throw new AppError(404, 'File not found');
+
+  if (file.ownerId !== req.userId) {
+    const canView = await hasPermission(req.userId!, file.id, 'file', 'view');
+    if (!canView) throw new AppError(403, 'Access denied');
+  }
+
+  if (process.env.USE_LOCAL_STORAGE === 'true') {
+    const filePath = path.join(process.cwd(), '../uploads', file.storageKey);
+    if (!fs.existsSync(filePath)) throw new AppError(404, 'File not found on disk');
+
+    // Set appropriate headers for preview
+    res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', 'inline'); // Important for preview
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
+
+    // For security, only allow certain file types to be previewed inline
+    const allowedPreviewTypes = [
+      'image/',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+      'text/',
+      'video/',
+      'audio/',
+      'application/json'
+    ];
+
+    const canPreview = allowedPreviewTypes.some(type => file.mimeType?.startsWith(type));
+    if (!canPreview) {
+      res.setHeader('Content-Disposition', 'attachment; filename="' + encodeURIComponent(file.name) + '"');
+    }
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } else {
+    // For S3 or other storage, redirect to the file URL
+    const url = storageService.getFileUrl(file.storageKey);
+    res.redirect(url);
+  }
 };
 
 export const renameFile = async (req: AuthRequest, res: Response) => {

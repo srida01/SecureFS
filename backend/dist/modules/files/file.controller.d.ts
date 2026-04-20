@@ -4,6 +4,7 @@ export declare const uploadFile: (req: AuthRequest, res: Response) => Promise<vo
 export declare const getFiles: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const getFileById: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const downloadFile: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const previewFile: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const renameFile: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const restoreFile: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const deleteFile: (req: AuthRequest, res: Response) => Promise<void>;

@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getShareLink = exports.createShareLink = void 0;
+exports.claimSharedAccess = exports.downloadSharedFile = exports.getShareLink = exports.createShareLink = void 0;
 const prisma_1 = require("../../utils/prisma");
 const errorHandler_1 = require("../../middleware/errorHandler");
 const auditLogger_1 = require("../../middleware/auditLogger");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const uuid_1 = require("uuid");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const createShareLink = async (req, res) => {
     const { resourceId, resourceType, password, expiresAt } = req.body;
     if (!resourceId || !resourceType) {
@@ -116,4 +118,114 @@ const getShareLink = async (req, res) => {
     });
 };
 exports.getShareLink = getShareLink;
+const downloadSharedFile = async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.query;
+    // 🔍 Find share link
+    const link = await prisma_1.prisma.shareLink.findUnique({
+        where: { token },
+        include: {
+            creator: {
+                select: {
+                    id: true,
+                    clerkUserId: true,
+                },
+            },
+        },
+    });
+    // ❌ Invalid / expired / inactive
+    if (!link ||
+        !link.isActive ||
+        (link.expiresAt && link.expiresAt < new Date())) {
+        throw new errorHandler_1.AppError(404, 'Share link expired or invalid');
+    }
+    // Only files can be downloaded
+    if (link.resourceType !== 'file') {
+        throw new errorHandler_1.AppError(400, 'Only files can be downloaded');
+    }
+    // 🔐 Password protection
+    if (link.passwordHash) {
+        if (!password) {
+            throw new errorHandler_1.AppError(401, 'Password required');
+        }
+        const isValid = await bcryptjs_1.default.compare(String(password), link.passwordHash);
+        if (!isValid) {
+            throw new errorHandler_1.AppError(401, 'Incorrect password');
+        }
+    }
+    // 📦 Fetch file
+    const file = await prisma_1.prisma.file.findUnique({
+        where: { id: link.resourceId },
+    });
+    if (!file) {
+        throw new errorHandler_1.AppError(404, 'File not found');
+    }
+    // 📥 Stream file from storage
+    const filePath = path_1.default.join(process.cwd(), '../uploads', file.storageKey);
+    if (!fs_1.default.existsSync(filePath)) {
+        throw new errorHandler_1.AppError(404, 'File not found in storage');
+    }
+    res.download(filePath, file.originalName);
+};
+exports.downloadSharedFile = downloadSharedFile;
+const claimSharedAccess = async (req, res) => {
+    const { token } = req.params;
+    if (!req.userId) {
+        throw new errorHandler_1.AppError(401, 'Authentication required');
+    }
+    // 🔍 Find share link
+    const link = await prisma_1.prisma.shareLink.findUnique({
+        where: { token },
+        include: {
+            creator: {
+                select: {
+                    id: true,
+                    clerkUserId: true,
+                },
+            },
+        },
+    });
+    // ❌ Invalid / expired / inactive
+    if (!link ||
+        !link.isActive ||
+        (link.expiresAt && link.expiresAt < new Date())) {
+        throw new errorHandler_1.AppError(404, 'Share link expired or invalid');
+    }
+    // 🚫 Prevent self-sharing
+    if (link.createdBy === req.userId) {
+        throw new errorHandler_1.AppError(400, 'Cannot claim access to your own shared link');
+    }
+    // Check if permission already exists
+    const existingPermission = await prisma_1.prisma.permission.findFirst({
+        where: {
+            grantedBy: link.createdBy,
+            granteeUserId: req.userId,
+            resourceId: link.resourceId,
+            resourceType: link.resourceType,
+            isActive: true,
+        },
+    });
+    if (existingPermission) {
+        // Permission already exists, just return success
+        res.json({ success: true, message: 'Access already granted' });
+        return;
+    }
+    // ✅ Grant permission (view access by default)
+    const permission = await prisma_1.prisma.permission.create({
+        data: {
+            grantedBy: link.createdBy,
+            granteeUserId: req.userId,
+            resourceId: link.resourceId,
+            resourceType: link.resourceType,
+            permissionLevel: 'view', // Default to view access
+            expiresAt: link.expiresAt, // Use same expiration as share link
+        },
+    });
+    await (0, auditLogger_1.createAuditLog)(req.userId, 'claim', link.resourceId, link.resourceType, {
+        shareLinkId: link.id,
+        permissionId: permission.id,
+    });
+    res.json({ success: true, message: 'Access granted', data: permission });
+};
+exports.claimSharedAccess = claimSharedAccess;
 //# sourceMappingURL=shareLink.controller.js.map
