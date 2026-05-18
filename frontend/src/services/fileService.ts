@@ -115,6 +115,11 @@ export const folderService = {
     return res.data.data;
   },
 
+  async renameFolder(id: string, name: string) {
+    const res = await api.patch(`/folders/${id}`, { name });
+    return res.data.data;
+  },
+
   async deleteFolder(id: string) {
     await api.delete(`/folders/${id}`);
   },

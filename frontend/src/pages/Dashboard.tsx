@@ -106,25 +106,21 @@ export default function Dashboard() {
         return;
       }
 
-      if (foldersRes.length === 0) {
-        const root = await folderService.createFolder('My Files', null);
-        dispatch(setCurrentFolder(root.id));
-        setBreadcrumbs([{ id: root.id, name: root.name }]);
-      } else {
-        dispatch(setCurrentFolder(foldersRes[0].id));
-        setBreadcrumbs([{ id: foldersRes[0].id, name: foldersRes[0].name }]);
-      }
+      const existingMyFiles = foldersRes.find((f: any) => f.name === 'My Files');
+if (!existingMyFiles) {
+  const root = await folderService.createFolder('My Files', null);
+  dispatch(setCurrentFolder(root.id));
+  setBreadcrumbs([{ id: root.id, name: root.name }]);
+} else {
+  dispatch(setCurrentFolder(existingMyFiles.id));
+  setBreadcrumbs([{ id: existingMyFiles.id, name: existingMyFiles.name }]);
+}
     })();
   }, []);
 
-  // Load files & folders when currentFolderId changes
-  useEffect(() => {
+  // Memoized loadContents to prevent stale closures and race conditions
+  const loadContents = useCallback(async () => {
     if (!currentFolderId) return;
-    setSelectedItems(new Set()); // Clear selection when navigating
-    loadContents();
-  }, [currentFolderId]);
-
-  const loadContents = async () => {
     const [folder, files, subfolders] = await Promise.all([
       folderService.getFolder(currentFolderId!),
       fileService.getFiles(currentFolderId!),
@@ -134,7 +130,14 @@ export default function Dashboard() {
     setCurrentFolderPermission(folder.permissionLevel || 'owner');
     dispatch(setFiles(files));
     dispatch(setFolders(subfolders));
-  };
+  }, [currentFolderId, dispatch]);
+
+  // Load files & folders when currentFolderId changes
+  useEffect(() => {
+    if (!currentFolderId) return;
+    setSelectedItems(new Set()); // Clear selection when navigating
+    loadContents();
+  }, [currentFolderId, loadContents]);
 
   const navigateToFolder = (id: string, name: string) => {
     dispatch(setCurrentFolder(id));
@@ -220,7 +223,7 @@ export default function Dashboard() {
 
     setUploadProgress({});
     loadContents();
-  }, [currentFolderId]);
+  }, [currentFolderId, loadContents]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: true });
 
@@ -284,11 +287,18 @@ export default function Dashboard() {
         </div>
 
         <StorageWidget quota={quota} />
-
+        {/* Folder Tree */}
+        
+         <div style={{ flex: 1, overflow: 'auto', borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+          <FolderTree 
+            currentFolderId={currentFolderId} 
+            breadcrumbs={breadcrumbs}
+            onBreadcrumbChange={setBreadcrumbs}
+          />
+        </div>
         {/* Sidebar nav */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Navigation</div>
-          <NavItem label="📁 My Files" active={location.pathname === '/'} onClick={() => navigate('/')} />
+          {/* <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1}}>Workspace</div> */}
           <NavItem label="🔗 Shared with Me" active={location.pathname === '/shared'} onClick={() => navigate('/shared')} />
           <NavItem label="🔐 Shared by You" active={location.pathname === '/shared-by-me'} onClick={() => navigate('/shared-by-me')} />
           <NavItem label="🗑️ Trash" active={location.pathname === '/trash'} onClick={() => navigate('/trash')} />
@@ -297,6 +307,7 @@ export default function Dashboard() {
             <NavItem label="🛡 Admin Panel" active={location.pathname === '/admin'} onClick={() => navigate('/admin')} />
           )}
         </div>
+        
 
         
 
