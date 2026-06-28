@@ -5,6 +5,14 @@ import crypto from 'crypto';
 
 const LOCAL_PATH = process.env.LOCAL_UPLOAD_PATH || './uploads';
 
+function buildStorageKey(originalName: string): string {
+  const ext = path.extname(originalName).slice(0, 20);
+  const stem = path.basename(originalName, ext)
+    .replace(/[^\w.-]/g, '_')
+    .slice(0, 80);
+  return `${uuidv4()}-${Date.now()}-${stem}${ext}`;
+}
+
 // Ensure upload directory exists
 if (!fs.existsSync(LOCAL_PATH)) {
   fs.mkdirSync(LOCAL_PATH, { recursive: true });
@@ -12,7 +20,7 @@ if (!fs.existsSync(LOCAL_PATH)) {
 
 export const storageService = {
   async uploadFile(buffer: Buffer, originalName: string, mimeType: string): Promise<{ key: string; checksum: string }> {
-    const key = `${uuidv4()}-${Date.now()}-${originalName}`;
+    const key = buildStorageKey(originalName);
     const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
 
     if (process.env.USE_LOCAL_STORAGE === 'true') {
