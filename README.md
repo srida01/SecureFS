@@ -155,31 +155,48 @@ Copy [`frontend/.env.example`](frontend/.env.example) to `frontend/.env` and fil
 
 
 ---
-
 ## Installation
 
-**Prerequisites:** Node.js 18+, a free [Clerk](https://clerk.com) account.
+### Prerequisites
+- Node.js 18+
+- A free Clerk account
+- MySQL installed locally
+
+Before running the project, you'll need a local MySQL database and a valid `DATABASE_URL` configured in the backend.
+
+1. Install MySQL on your machine and ensure the MySQL server is running.
+2. Create a database (for example, `secure_cloud_storage`).
+3. Update the backend `.env` file with your local MySQL connection string:
+
+```env
+DATABASE_URL="mysql://username:password@localhost:3306/secure_cloud_storage"
+```
+
+Replace `username`, `password`, and the database name with your own MySQL credentials. Make sure the MySQL user has permission to create and modify databases.
+
+### 1. Backend setup
 
 ```bash
-
-
-# 2. Backend setup
 cd backend
-cp .env.example .env          # fill in CLERK_SECRET_KEY and DATABASE_URL
+cp .env.example .env          # Fill in CLERK_SECRET_KEY and DATABASE_URL
 npm install
+npx prisma generate
 npx prisma migrate deploy
 npm run dev                   # http://localhost:5000
+```
 
-# 3. Frontend setup (new terminal)
+### 2. Frontend setup (new terminal)
+
+```bash
 cd frontend
-cp .env.example .env          # fill in VITE_CLERK_PUBLISHABLE_KEY
+cp .env.example .env          # Fill in VITE_CLERK_PUBLISHABLE_KEY
 npm install
 npm run dev                   # http://localhost:5173
 ```
 
-Open `http://localhost:5173`, sign up via Clerk, and the Dashboard will sync your user on first load.
+Open **http://localhost:5173**, sign up via Clerk, and the Dashboard will automatically sync your user on first load.
 
-For deeper setup details and request-level flows, see [WORKFLOW.md](WORKFLOW.md).
+For deeper setup details and request-level flows, see `WORKFLOW.md`.
 
 ---
 
