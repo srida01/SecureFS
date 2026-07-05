@@ -40,7 +40,7 @@ A full-stack secure cloud file platform that handles identity via Clerk, stores 
 | Database | [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma) | MySQL 8 via Prisma ORM |
 | Object Storage | [`backend/src/services/storage.service.ts`](backend/src/services/storage.service.ts) | Local disk (default) or S3 URL stub |
 | Auth Provider | Clerk (external) | Sign-in/up, JWT issuance |
-| Infrastructure | [`docker-compose.yml`](docker-compose.yml) | MySQL container on host port **3307** |
+
 
 ```mermaid
 flowchart LR
@@ -152,24 +152,16 @@ Copy [`frontend/.env.example`](frontend/.env.example) to `frontend/.env` and fil
 | `VITE_CLERK_PUBLISHABLE_KEY` | Yes | Clerk publishable key |
 | `VITE_API_URL` | No | `http://localhost:5000/api` |
 
-### Docker MySQL ([`docker-compose.yml`](docker-compose.yml))
 
-| Setting | Value |
-|---------|-------|
-| Database | `secure_cloud_storage` |
-| User / Password | `clouduser` / `CloudPass@2024` |
-| Host port | **3307** → container 3306 |
-| Root password | `rootpass` |
 
 ---
 
 ## Installation
 
-**Prerequisites:** Node.js 18+, Docker Desktop, a free [Clerk](https://clerk.com) account.
+**Prerequisites:** Node.js 18+, a free [Clerk](https://clerk.com) account.
 
 ```bash
-# 1. Start MySQL
-docker compose up -d
+
 
 # 2. Backend setup
 cd backend
@@ -196,8 +188,7 @@ For deeper setup details and request-level flows, see [WORKFLOW.md](WORKFLOW.md)
 ### Quick Start
 
 ```bash
-# Terminal 1 — database
-docker compose up -d
+
 
 # Terminal 2 — API
 cd backend && npm run dev
@@ -244,7 +235,6 @@ curl http://localhost:5000/api/health
 secure_cloud_system/
 ├── README.md                              # This file
 ├── WORKFLOW.md                            # End-to-end flows + file reference
-├── docker-compose.yml                     # MySQL 8 container
 ├── FEATURES_OVERVIEW.md                   # Feature design rationale
 ├── TRASH_API_DOCUMENTATION.md             # Trash endpoint reference
 ├── PERSON3_PERMISSIONS_SHARING_ACCESS_CONTROL.md
@@ -264,7 +254,6 @@ secure_cloud_system/
 │       ├── components/                    # FileGrid, ShareDialog, modals, ...
 │       ├── services/                      # api.ts, fileService.ts
 │       └── store/                         # Redux auth + file slices
-└── *.tsx (repo root)                      # Legacy duplicates — not part of build
 ```
 
 The canonical frontend source is `frontend/src/`. Root-level `.tsx` files (`Dashboard.tsx`, `FileGrid.tsx`, etc.) are legacy copies and are not wired into the Vite build.
